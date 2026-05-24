@@ -19,7 +19,7 @@
   --r:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;font-size:15px;line-height:1.6}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;font-size:15px;line-height:1.6;will-change:auto}
 
 .topbar{background:linear-gradient(135deg,#0f1117,#0a1a0f 60%,#0f1117);border-bottom:1px solid var(--border);padding:1.75rem 2rem 1.5rem;position:sticky;top:0;z-index:100}
 .topbar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
@@ -30,7 +30,7 @@ h1.brand-title{font-family:var(--fh);font-size:1.85rem;font-weight:700;color:var
 h1.brand-title em{color:var(--green);font-style:italic}
 .topbar-actions{display:flex;gap:.6rem;flex-wrap:wrap}
 
-.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;border-radius:7px;font-family:var(--fb);font-size:.82rem;cursor:pointer;border:1px solid;transition:all .2s;font-weight:600;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;border-radius:7px;font-family:var(--fb);font-size:.82rem;cursor:pointer;border:1px solid;transition:all .15s;font-weight:600;white-space:nowrap}
 .btn-primary{background:var(--green2);border-color:var(--green2);color:#fff;box-shadow:0 2px 12px rgba(74,222,128,.2)}
 .btn-primary:hover{background:#15803d;transform:translateY(-1px)}
 .btn-secondary{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text)}
@@ -48,40 +48,40 @@ h1.brand-title em{color:var(--green);font-style:italic}
 .ph-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
 .panel-body{padding:1.1rem}
 
-.strain-block{margin-bottom:.8rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem;transition:border-color .2s}
+.strain-block{margin-bottom:.8rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem;transition:border-color .15s}
 .strain-block:focus-within{border-color:rgba(74,222,128,.4)}
 .strain-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.45rem}
 .cdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.sname{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.82rem;padding:.2rem .3rem;flex:1;transition:border-color .2s}
+.sname{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.82rem;padding:.2rem .3rem;flex:1;transition:border-color .15s}
 .sname:focus{outline:none;border-color:var(--green)}
-.sdel{background:transparent;border:1px solid transparent;color:var(--muted);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.sdel{background:transparent;border:1px solid transparent;color:var(--muted);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .sdel:hover{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.3);color:var(--red)}
-.svals{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.78rem;padding:.3rem .3rem;width:100%;transition:border-color .2s;resize:none;height:44px}
+.svals{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.78rem;padding:.3rem .3rem;width:100%;transition:border-color .15s;resize:none;height:44px}
 .svals:focus{outline:none;border-color:var(--green)}
 .shint{color:var(--muted);font-size:.67rem;margin-top:.2rem;font-family:var(--fm)}
 
-.btn-add-s{background:transparent;border:1px dashed rgba(74,222,128,.3);color:rgba(74,222,128,.75);border-radius:8px;width:100%;padding:.55rem;cursor:pointer;font-family:var(--fb);font-size:.82rem;transition:all .2s}
+.btn-add-s{background:transparent;border:1px dashed rgba(74,222,128,.3);color:rgba(74,222,128,.75);border-radius:8px;width:100%;padding:.55rem;cursor:pointer;font-family:var(--fb);font-size:.82rem;transition:all .15s}
 .btn-add-s:hover{background:rgba(74,222,128,.07);border-style:solid;color:var(--green)}
 
 .cfg-row{display:flex;align-items:center;gap:.55rem;padding-top:.85rem;border-top:1px solid var(--border);margin-top:.85rem;flex-wrap:wrap}
 .cfg-lbl{font-size:.74rem;color:var(--muted);font-family:var(--fm);flex-shrink:0}
-.cfg-sel,.cfg-inp{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.78rem;padding:.3rem .5rem;border-radius:6px;transition:border-color .2s}
+.cfg-sel,.cfg-inp{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.78rem;padding:.3rem .5rem;border-radius:6px;transition:border-color .15s}
 .cfg-sel:focus,.cfg-inp:focus{outline:none;border-color:var(--green)}
 .cfg-inp{flex:1;min-width:60px}
 
 .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2);overflow-x:auto}
-.tab{padding:.65rem 1rem;font-size:.78rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-weight:600;white-space:nowrap;font-family:var(--fm);letter-spacing:.02em}
+.tab{padding:.65rem 1rem;font-size:.78rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-weight:600;white-space:nowrap;font-family:var(--fm);letter-spacing:.02em}
 .tab.active{color:var(--green);border-bottom-color:var(--green)}
 .tab:hover:not(.active){color:var(--text)}
-.tc{display:none;padding:1.25rem}
+.tc{display:none;padding:1.25rem;will-change:auto}
 .tc.active{display:block}
 
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
 @media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
-.cc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+.cc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1rem;contain:layout style paint}
 .cct{font-family:var(--fm);font-size:.68rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem}
 .ccp{font-size:.73rem;color:var(--muted);margin-top:.45rem;font-style:italic;line-height:1.4}
-.cw{position:relative;height:228px}
+.cw{position:relative;height:228px;contain:strict}
 .cf{grid-column:1/-1}
 
 .dtbl{width:100%;border-collapse:collapse;font-size:.81rem}
@@ -337,11 +337,14 @@ h1.brand-title em{color:var(--green);font-style:italic}
 </div>
 
 <script>
-/* ── STATE ── */
+/* ── STATE & CACHE ── */
 let sid=0;
 const PAL=['#4ade80','#60a5fa','#fbbf24','#f87171','#a78bfa','#34d399','#f472b6','#38bdf8','#fb923c','#a3e635'];
 let CH={};
 const DEF=[{n:'Cepa A',v:'45.2, 47.8, 44.1, 46.5, 45.9'},{n:'Cepa B',v:'62.3, 65.1, 63.7, 64.0, 61.8'},{n:'Cepa C',v:'38.4, 40.2, 37.9, 39.1, 38.8'},{n:'Cepa D',v:'71.5, 73.2, 70.8, 72.1, 74.0'}];
+
+// CACHE: evita recálculos innecesarios
+let CACHE={lastData:null,lastResults:null,statsCache:new Map(),shapiroCache:new Map()};
 
 /* ── UI ── */
 function addStrain(n='',v=''){
@@ -366,6 +369,11 @@ const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
 const sd=(a,d=1)=>Math.sqrt(a.reduce((s,v)=>s+(v-avg(a))**2,0)/(a.length-d));
 const se=a=>sd(a)/Math.sqrt(a.length);
 const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2===0?(s[n/2-1]+s[n/2])/2:s[Math.floor(n/2)]};
+
+// Función optimizada: calcula Q1 y Q3 al mismo tiempo
+function getQuartiles(a){const s=[...a].sort((x,y)=>x-y),n=s.length,q1=s[Math.floor(n*.25)],q3=s[Math.floor(n*.75)];return{q1,q3};}
+
+// Mantener compatibilidad con código existente
 const qq1=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length*.25)]};
 const qq3=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length*.75)]};
 
@@ -376,7 +384,7 @@ function bCF(x,a,b){const M=200,E=3e-7,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x
 function bI(x,a,b){if(x<=0)return 0;if(x>=1)return 1;return Math.exp(Math.log(x)*a+Math.log(1-x)*b-lgam(a)-lgam(b)+lgam(a+b))/a*bCF(x,a,b);}
 function fCDF(x,d1,d2){return 1-bI(d2/(d2+d1*x),d2/2,d1/2);}
 
-function shapiro(x){x=[...x].sort((a,b)=>a-b);const n=x.length;if(n<3)return{W:1,p:1};const m=avg(x),s2=x.reduce((s,v)=>s+(v-m)**2,0);const mi=x.map((_,i)=>qnorm((i+1-.375)/(n+.25)));const dot=x.reduce((s,v,i)=>s+v*mi[i],0),mi2=mi.reduce((s,v)=>s+v*v,0);const W=Math.max(0,Math.min(1,dot*dot/(s2*mi2)));const mu=-1.2725+1.0521*Math.log(n),sig=1.0308-.26763*Math.log(n),z=(Math.log(1-W)-mu)/sig;return{W,p:Math.max(0,Math.min(1,1-pnorm(z)))};}
+function shapiro(x){x=[...x].sort((a,b)=>a-b);const n=x.length;if(n<3)return{W:1,p:1};const key=JSON.stringify(x);if(CACHE.shapiroCache.has(key))return CACHE.shapiroCache.get(key);const m=avg(x),s2=x.reduce((s,v)=>s+(v-m)**2,0);const mi=x.map((_,i)=>qnorm((i+1-.375)/(n+.25)));const dot=x.reduce((s,v,i)=>s+v*mi[i],0),mi2=mi.reduce((s,v)=>s+v*v,0);const W=Math.max(0,Math.min(1,dot*dot/(s2*mi2)));const mu=-1.2725+1.0521*Math.log(n),sig=1.0308-.26763*Math.log(n),z=(Math.log(1-W)-mu)/sig;const res={W,p:Math.max(0,Math.min(1,1-pnorm(z)))};CACHE.shapiroCache.set(key,res);return res;}}
 
 function anova(gs){const all=gs.flat(),N=all.length,k=gs.length,gm=avg(all);const SSb=gs.reduce((s,g)=>s+g.length*(avg(g)-gm)**2,0),SSw=gs.reduce((s,g)=>s+g.reduce((q,v)=>q+(v-avg(g))**2,0),0);const dfb=k-1,dfw=N-k,MSb=SSb/dfb,MSw=SSw/dfw,F=MSb/MSw,p=1-fCDF(F,dfb,dfw);return{F,p,dfb,dfw,SSb,SSw,MSb,MSw,N,k,eta2:SSb/(SSb+SSw)};}
 function levene(gs){return anova(gs.map(g=>{const m=avg(g);return g.map(v=>Math.abs(v-m));}));}
@@ -384,41 +392,101 @@ function levene(gs){return anova(gs.map(g=>{const m=avg(g);return g.map(v=>Math.
 function pTukey(q,k,df){if(q<=0)return 0;const steps=120,b=q/Math.sqrt(2);let s=0;for(let i=0;i<steps;i++){for(const t of [i/steps*10,(i+1)/steps*10]){const chi=Math.exp(-t*t/2)*Math.sqrt(2/Math.PI),phi=2*pnorm(b*t)-1;s+=chi*Math.pow(Math.max(0,phi),k-1);}}return Math.min(1,s*(10/steps)/2);}
 function qTukey(p,k,df){let lo=0,hi=20;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(pTukey(m,k,df)<p)lo=m;else hi=m;}return(lo+hi)/2;}
 
-function tukey(groups,alpha){const names=groups.map(g=>g.name),vals=groups.map(g=>g.vals),{dfw,MSw}=anova(vals),pairs=[];for(let i=0;i<names.length;i++){for(let j=i+1;j<names.length;j++){const diff=avg(vals[i])-avg(vals[j]),ni=vals[i].length,nj=vals[j].length,se_q=Math.sqrt(MSw/2*(1/ni+1/nj)),qv=Math.abs(diff)/se_q,p=Math.min(1,Math.max(0,1-pTukey(qv,names.length,dfw))),qc=qTukey(1-alpha,names.length,dfw),hsd=qc*se_q;pairs.push({g1:names[i],g2:names[j],diff,q:qv,p,hsd,sig:Math.abs(diff)>hsd});}}return pairs;}
+function tukey(groups,alpha){const names=groups.map(g=>g.name),vals=groups.map(g=>g.vals),{dfw,MSw}=anova(vals),pairs=[];let pairsCache=CACHE.statsCache.get('tukey_'+JSON.stringify(names));if(!pairsCache){const len=names.length;for(let i=0;i<len;i++){const vi=vals[i],mi=avg(vi),ni=vi.length;for(let j=i+1;j<len;j++){const vj=vals[j],mj=avg(vj),nj=vj.length,diff=mi-mj,se_q=Math.sqrt(MSw/2*(1/ni+1/nj)),qv=Math.abs(diff)/se_q,p=Math.min(1,Math.max(0,1-pTukey(qv,len,dfw))),qc=qTukey(1-alpha,len,dfw),hsd=qc*se_q;pairs.push({g1:names[i],g2:names[j],diff,q:qv,p,hsd,sig:Math.abs(diff)>hsd});}}}else{return pairsCache;}CACHE.statsCache.set('tukey_'+JSON.stringify(names),pairs);return pairs;}
 
 function cld(groups,pairs){const names=groups.map(g=>g.name);let sets=names.map((_,i)=>new Set([i]));for(const p of pairs){if(!p.sig){const i=names.indexOf(p.g1),j=names.indexOf(p.g2),si=sets[i],sj=sets[j];if(![...si].some(x=>[...sj].includes(x))){const mg=new Set([...si,...sj]);for(const idx of mg)sets[idx]=mg;}}}const uq=[...new Set(sets.map(s=>JSON.stringify([...s].sort((a,b)=>a-b))))].map(s=>JSON.parse(s));const L={};names.forEach(n=>L[n]=[]);uq.forEach((g,li)=>g.forEach(idx=>L[names[idx]].push(String.fromCharCode(97+li))));names.forEach(n=>L[n]=L[n].join(''));return L;}
 
 /* ── MAIN ── */
 function runAnalysis(){
   const G=getData();if(G.length<2){alert('Necesitas al menos 2 cepas con datos válidos.');return;}
+  
+  // Verifica si los datos cambiaron desde el último análisis
+  const dataKey=JSON.stringify(G);
+  if(CACHE.lastData===dataKey&&CACHE.lastResults){
+    console.log('✓ Usando resultados en caché');
+    return;
+  }
+  
+  // Mostrar indicador de cálculo
+  const tabs=document.querySelectorAll('.tab');
+  tabs.forEach(t=>t.style.opacity='0.6');
+  
   const alpha=parseFloat(document.getElementById('asel').value),unit=document.getElementById('unit').value||'µg/mL';
+  
+  // Limpiar caché de Shapiro-Wilk ya que pueden haber cambios menores
+  CACHE.shapiroCache.clear();
+  
   const ar=anova(G.map(g=>g.vals)),pairs=tukey(G,alpha),letters=cld(G,pairs);
   const sw=G.map(g=>({name:g.name,...shapiro(g.vals)})),lev=levene(G.map(g=>g.vals));
-  rCharts(G,pairs,letters,unit,alpha,ar);
-  rAnova(ar,alpha,unit);rTukey(pairs,letters,alpha,unit,G);rSup(sw,lev,alpha);rDesc(G,unit,letters);
+  
+  // Guardar en caché
+  CACHE.lastData=dataKey;
+  CACHE.lastResults={ar,pairs,letters,sw,lev,G,alpha,unit};
+  
+  // Renderizar usando requestIdleCallback para no bloquear UI
+  if('requestIdleCallback' in window){
+    requestIdleCallback(()=>{
+      rCharts(G,pairs,letters,unit,alpha,ar);
+      rAnova(ar,alpha,unit);rTukey(pairs,letters,alpha,unit,G);rSup(sw,lev,alpha);rDesc(G,unit,letters);
+      ocultarEmpty();
+      tabs.forEach(t=>t.style.opacity='1');
+    });
+  }else{
+    requestAnimationFrame(()=>{
+      rCharts(G,pairs,letters,unit,alpha,ar);
+      rAnova(ar,alpha,unit);rTukey(pairs,letters,alpha,unit,G);rSup(sw,lev,alpha);rDesc(G,unit,letters);
+      ocultarEmpty();
+      tabs.forEach(t=>t.style.opacity='1');
+    });
+  }
+}
+
+function ocultarEmpty(){
   ['charts','anova','tukey','sup','desc'].forEach(t=>{
     const e=document.getElementById('e-'+t),c=document.getElementById('c-'+t);
     if(e)e.style.display='none';if(c)c.style.display='block';
   });
 }
 
-/* ── RENDER CHARTS ── */
+/* ── RENDER CHARTS (Optimizado) ── */
 function rCharts(G,pairs,letters,unit,alpha,ar){
   const names=G.map(g=>g.name),means=G.map(g=>avg(g.vals)),errs=G.map(g=>se(g.vals)),cols=G.map(g=>g.color);
-  ['barChart','boxChart'].forEach(id=>{if(CH[id]){CH[id].destroy();delete CH[id];}});
+  
+  // ACTUALIZAR en lugar de destruir/recrear si ya existen
+  let updateChart=false;
+  if(CH.barChart){
+    CH.barChart.data.labels=names;
+    CH.barChart.data.datasets[0].data=means;
+    CH.barChart.data.datasets[0].backgroundColor=cols.map(c=>c+'bb');
+    CH.barChart.data.datasets[0].borderColor=cols;
+    CH.barChart.update('none'); // 'none' = sin animación para más velocidad
+    updateChart=true;
+  }
+  
+  if(CH.boxChart){
+    const bxD=G.map(g=>({min:Math.min(...g.vals),q1:qq1(g.vals),med:med(g.vals),q3:qq3(g.vals),max:Math.max(...g.vals),vals:g.vals,color:g.color}));
+    const jD=G.map((g,i)=>({type:'scatter',label:g.name,data:g.vals.map(v=>({x:i+(Math.random()-.5)*.27,y:v})),backgroundColor:g.color+'88',pointRadius:4,showLine:false,borderColor:g.color,borderWidth:1}));
+    CH.boxChart.data.datasets=jD;
+    CH.boxChart.scales.x.min=-.6;CH.boxChart.scales.x.max=G.length-.4;
+    CH.boxChart.update('none');
+    updateChart=true;
+  }
 
   const sig=ar.p<alpha;
   document.getElementById('cap-bar').textContent=`Figura 1. Producción de IAA (${unit}) por cepa bacteriana. Las barras muestran la media ± error estándar. Las letras sobre las barras indican grupos homogéneos según la prueba de Tukey HSD (α = ${alpha}). ${sig?`Se observaron diferencias estadísticamente significativas entre cepas (F(${ar.dfb},${ar.dfw}) = ${ar.F.toFixed(3)}, p = ${ar.p.toFixed(4)}).`:'No se observaron diferencias estadísticamente significativas entre cepas.'}`;
   document.getElementById('cap-box').textContent=`Figura 2. Distribución de la producción de IAA (${unit}) por cepa. Los puntos representan réplicas individuales (n = ${G.map(g=>g.vals.length).join(', ')}). La línea central indica la mediana; la caja abarca el rango intercuartílico (Q1–Q3).`;
   document.getElementById('cap-hm').textContent=`Figura 3. Matriz de p-valores ajustados de la prueba de Tukey HSD entre pares de cepas. Los valores marcados con ★ indican diferencias estadísticamente significativas (p < ${alpha}). Escala de color: verde = sin diferencia (p alto); rojo = diferencia significativa (p bajo).`;
 
-  const barCtx=document.getElementById('barChart').getContext('2d');
-  CH.barChart=new Chart(barCtx,{type:'bar',data:{labels:names,datasets:[{data:means,backgroundColor:cols.map(c=>c+'bb'),borderColor:cols,borderWidth:2,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y.toFixed(3)} ${unit}`}}},scales:{x:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'}},y:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'},title:{display:true,text:unit,color:'#9ca3af',font:{family:'JetBrains Mono',size:10}}}}},plugins:[{afterDraw(chart){const ctx=chart.ctx;chart.data.datasets[0].data.forEach((_,i)=>{const meta=chart.getDatasetMeta(0),bar=meta.data[i],x=bar.x,y=bar.y,py=chart.scales.y.height/(chart.scales.y.max-chart.scales.y.min),ey=errs[i]*py;ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y-ey);ctx.lineTo(x,y+ey);ctx.moveTo(x-5,y-ey);ctx.lineTo(x+5,y-ey);ctx.moveTo(x-5,y+ey);ctx.lineTo(x+5,y+ey);ctx.stroke();ctx.fillStyle='#f0f4f8';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';ctx.fillText(letters[names[i]].toUpperCase(),x,y-ey-8);});}}]});
+  // CREAR gráficos solo si no existen
+  if(!updateChart){
+    const barCtx=document.getElementById('barChart').getContext('2d');
+    CH.barChart=new Chart(barCtx,{type:'bar',data:{labels:names,datasets:[{data:means,backgroundColor:cols.map(c=>c+'bb'),borderColor:cols,borderWidth:2,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y.toFixed(3)} ${unit}`}}},scales:{x:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'}},y:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'},title:{display:true,text:unit,color:'#9ca3af',font:{family:'JetBrains Mono',size:10}}}}},plugins:[{afterDraw(chart){const ctx=chart.ctx;chart.data.datasets[0].data.forEach((_,i)=>{const meta=chart.getDatasetMeta(0),bar=meta.data[i],x=bar.x,y=bar.y,py=chart.scales.y.height/(chart.scales.y.max-chart.scales.y.min),ey=errs[i]*py;ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y-ey);ctx.lineTo(x,y+ey);ctx.moveTo(x-5,y-ey);ctx.lineTo(x+5,y-ey);ctx.moveTo(x-5,y+ey);ctx.lineTo(x+5,y+ey);ctx.stroke();ctx.fillStyle='#f0f4f8';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';ctx.fillText(letters[names[i]].toUpperCase(),x,y-ey-8);});}}]});
 
-  const bxD=G.map(g=>({min:Math.min(...g.vals),q1:qq1(g.vals),med:med(g.vals),q3:qq3(g.vals),max:Math.max(...g.vals),vals:g.vals,color:g.color}));
-  const jD=G.map((g,i)=>({type:'scatter',label:g.name,data:g.vals.map(v=>({x:i+(Math.random()-.5)*.27,y:v})),backgroundColor:g.color+'88',pointRadius:4,showLine:false,borderColor:g.color,borderWidth:1}));
-  const bxCtx=document.getElementById('boxChart').getContext('2d');
-  CH.boxChart=new Chart(bxCtx,{type:'scatter',data:{datasets:jD},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:-.6,max:G.length-.4,ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10},callback:v=>names[Math.round(v)]||'',stepSize:1},grid:{color:'#2a2d35'}},y:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'},title:{display:true,text:unit,color:'#9ca3af',font:{family:'JetBrains Mono',size:10}}}}},plugins:[{afterDraw(chart){const ctx=chart.ctx,sc=chart.scales;bxD.forEach((b,i)=>{const x=sc.x.getPixelForValue(i),w=26,yq1=sc.y.getPixelForValue(b.q1),yq3=sc.y.getPixelForValue(b.q3),ym=sc.y.getPixelForValue(b.med),ymn=sc.y.getPixelForValue(b.min),ymx=sc.y.getPixelForValue(b.max);ctx.strokeStyle=b.color;ctx.fillStyle=b.color+'22';ctx.lineWidth=2;ctx.fillRect(x-w,yq3,w*2,yq1-yq3);ctx.strokeRect(x-w,yq3,w*2,yq1-yq3);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x-w,ym);ctx.lineTo(x+w,ym);ctx.stroke();ctx.strokeStyle=b.color;ctx.lineWidth=1.5;[yq3,yq1].forEach((y,ii)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,ii===0?ymx:ymn);ctx.stroke();ctx.beginPath();ctx.moveTo(x-w/2,ii===0?ymx:ymn);ctx.lineTo(x+w/2,ii===0?ymx:ymn);ctx.stroke();});});}}]});
+    const bxD=G.map(g=>{const {q1,q3}=getQuartiles(g.vals);return {min:Math.min(...g.vals),q1,med:med(g.vals),q3,max:Math.max(...g.vals),vals:g.vals,color:g.color}});
+    const jD=G.map((g,i)=>({type:'scatter',label:g.name,data:g.vals.map(v=>({x:i+(Math.random()-.5)*.27,y:v})),backgroundColor:g.color+'88',pointRadius:4,showLine:false,borderColor:g.color,borderWidth:1}));
+    const bxCtx=document.getElementById('boxChart').getContext('2d');
+    CH.boxChart=new Chart(bxCtx,{type:'scatter',data:{datasets:jD},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:false}},scales:{x:{type:'linear',min:-.6,max:G.length-.4,ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10},callback:v=>names[Math.round(v)]||'',stepSize:1},grid:{color:'#2a2d35'}},y:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'},title:{display:true,text:unit,color:'#9ca3af',font:{family:'JetBrains Mono',size:10}}}}},plugins:[{afterDraw(chart){const ctx=chart.ctx,sc=chart.scales;bxD.forEach((b,i)=>{const x=sc.x.getPixelForValue(i),w=26,yq1=sc.y.getPixelForValue(b.q1),yq3=sc.y.getPixelForValue(b.q3),ym=sc.y.getPixelForValue(b.med),ymn=sc.y.getPixelForValue(b.min),ymx=sc.y.getPixelForValue(b.max);ctx.strokeStyle=b.color;ctx.fillStyle=b.color+'22';ctx.lineWidth=2;ctx.fillRect(x-w,yq3,w*2,yq1-yq3);ctx.strokeRect(x-w,yq3,w*2,yq1-yq3);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x-w,ym);ctx.lineTo(x+w,ym);ctx.stroke();ctx.strokeStyle=b.color;ctx.lineWidth=1.5;[yq3,yq1].forEach((y,ii)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,ii===0?ymx:ymn);ctx.stroke();ctx.beginPath();ctx.moveTo(x-w/2,ii===0?ymx:ymn);ctx.lineTo(x+w/2,ii===0?ymx:ymn);ctx.stroke();});});}}]});
+  }
 
   const n=G.length;let h='<div style="overflow-x:auto"><table class="hmt"><thead><tr><th></th>';
   names.forEach(nm=>h+=`<th>${nm}</th>`);h+='</tr></thead><tbody>';
@@ -490,17 +558,22 @@ function rSup(sw,lev,alpha){
 /* ── RENDER DESC ── */
 function rDesc(G,unit,letters){
   let h=`<div class="slbl">Tabla 3. Estadísticos descriptivos por cepa</div><div style="overflow-x:auto;margin-bottom:.7rem"><table class="dtbl"><thead><tr><th>Cepa</th><th>n</th><th>Media</th><th>DE</th><th>EE</th><th>Mín.</th><th>Q1</th><th>Mediana</th><th>Q3</th><th>Máx.</th><th>Grupo</th></tr></thead><tbody>`;
-  G.forEach(g=>{const v=g.vals,n=v.length;h+=`<tr><td class="tn">${g.name}</td><td>${n}</td><td>${avg(v).toFixed(4)}</td><td>${sd(v).toFixed(4)}</td><td>${se(v).toFixed(4)}</td><td>${Math.min(...v).toFixed(4)}</td><td>${qq1(v).toFixed(4)}</td><td>${med(v).toFixed(4)}</td><td>${qq3(v).toFixed(4)}</td><td>${Math.max(...v).toFixed(4)}</td><td><span class="lchip">${letters[g.name].toUpperCase()}</span></td></tr>`;});
+  G.forEach(g=>{const v=g.vals,n=v.length,{q1,q3}=getQuartiles(v);h+=`<tr><td class="tn">${g.name}</td><td>${n}</td><td>${avg(v).toFixed(4)}</td><td>${sd(v).toFixed(4)}</td><td>${se(v).toFixed(4)}</td><td>${Math.min(...v).toFixed(4)}</td><td>${q1.toFixed(4)}</td><td>${med(v).toFixed(4)}</td><td>${q3.toFixed(4)}</td><td>${Math.max(...v).toFixed(4)}</td><td><span class="lchip">${letters[g.name].toUpperCase()}</span></td></tr>`;});
   h+=`</tbody></table></div><p class="dtbl-note">DE = Desviación estándar; EE = Error estándar; Q1/Q3 = cuartiles 1.° y 3.°. Unidades en ${unit}.</p>`;
   document.getElementById('c-desc').innerHTML=h;
 }
 
-/* ── TABS ── */
+/* ── TABS (Optimized) ── */
 function stab(name){
   const ns=['charts','anova','tukey','sup','desc'];
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',ns[i]===name));
   document.querySelectorAll('.tc').forEach(c=>c.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
+  
+  // Actualizar gráficos si se muestra charts
+  if(name==='charts'&&CH.barChart){
+    setTimeout(()=>{CH.barChart.resize();CH.boxChart&&CH.boxChart.resize();},50);
+  }
 }
 
 /* ── PRINT ── */
