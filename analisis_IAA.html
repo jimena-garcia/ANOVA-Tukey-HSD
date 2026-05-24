@@ -5,852 +5,520 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Análisis IAA — ANOVA + Tukey HSD</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root{
-    --bg:#0d1117; --surface:#161b22; --surface2:#1c2330; --border:#30363d;
-    --green:#3fb950; --green2:#238636; --green3:#0d4429;
-    --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff;
-    --red:#f85149; --yellow:#e3b341; --teal:#39d353;
-    --font-head:'DM Serif Display',serif;
-    --font-body:'Outfit',sans-serif;
-    --font-mono:'DM Mono',monospace;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+/* ═══════════ SCREEN ═══════════ */
+:root{
+  --bg:#0f1117;--surface:#16191f;--surface2:#1c2028;--border:#2a2d35;
+  --green:#4ade80;--green2:#16a34a;
+  --text:#f0f4f8;--muted:#6b7280;--accent:#60a5fa;
+  --red:#f87171;--yellow:#fbbf24;
+  --fh:'Playfair Display',serif;
+  --fb:'Source Serif 4',serif;
+  --fm:'JetBrains Mono',monospace;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;font-size:15px;line-height:1.6}
 
-  /* ── HEADER ── */
-  header{
-    background:linear-gradient(135deg,#0d1117 0%,#0d2a1a 50%,#0d1117 100%);
-    border-bottom:1px solid var(--border);
-    padding:2.5rem 2rem 2rem;
-    position:relative;overflow:hidden;
-  }
-  header::before{
-    content:'';position:absolute;inset:0;
-    background:radial-gradient(ellipse 60% 80% at 30% 50%,rgba(63,185,80,.08),transparent);
-  }
-  header::after{
-    content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;
-    border-radius:50%;border:1px solid rgba(63,185,80,.15);
-  }
-  .header-inner{max-width:1200px;margin:0 auto;position:relative}
-  .badge{
-    display:inline-flex;align-items:center;gap:6px;
-    background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.3);
-    color:var(--green);font-size:.72rem;font-family:var(--font-mono);
-    padding:.25rem .75rem;border-radius:999px;margin-bottom:1rem;letter-spacing:.05em;
-  }
-  .badge::before{content:'●';font-size:.5rem}
-  h1{font-family:var(--font-head);font-size:2.4rem;line-height:1.1;color:var(--text);margin-bottom:.5rem}
-  h1 em{color:var(--green);font-style:normal}
-  .subtitle{color:var(--muted);font-size:.95rem;font-weight:300}
+.topbar{background:linear-gradient(135deg,#0f1117,#0a1a0f 60%,#0f1117);border-bottom:1px solid var(--border);padding:1.75rem 2rem 1.5rem;position:sticky;top:0;z-index:100}
+.topbar-inner{max-width:1280px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.brand-tag{font-family:var(--fm);font-size:.68rem;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.35rem;display:flex;align-items:center;gap:.5rem}
+.brand-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1.brand-title{font-family:var(--fh);font-size:1.85rem;font-weight:700;color:var(--text);line-height:1.1}
+h1.brand-title em{color:var(--green);font-style:italic}
+.topbar-actions{display:flex;gap:.6rem;flex-wrap:wrap}
 
-  /* ── LAYOUT ── */
-  .container{max-width:1200px;margin:0 auto;padding:2rem}
-  .grid-main{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start}
-  @media(max-width:900px){.grid-main{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;border-radius:7px;font-family:var(--fb);font-size:.82rem;cursor:pointer;border:1px solid;transition:all .2s;font-weight:600;white-space:nowrap}
+.btn-primary{background:var(--green2);border-color:var(--green2);color:#fff;box-shadow:0 2px 12px rgba(74,222,128,.2)}
+.btn-primary:hover{background:#15803d;transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,.05);border-color:var(--border);color:var(--text)}
+.btn-secondary:hover{background:rgba(255,255,255,.1)}
+.btn-print{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.3);color:var(--accent)}
+.btn-print:hover{background:rgba(96,165,250,.18)}
 
-  /* ── PANEL ── */
-  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-  .panel-head{
-    padding:1rem 1.25rem;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;gap:.6rem;
-    background:var(--surface2);
-  }
-  .panel-head h2{font-size:.9rem;font-weight:500;letter-spacing:.02em;color:var(--text)}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
-  .panel-body{padding:1.25rem}
+.main-wrap{max-width:1280px;margin:0 auto;padding:1.5rem 2rem}
+.grid-app{display:grid;grid-template-columns:345px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:900px){.grid-app{grid-template-columns:1fr}}
 
-  /* ── DATA ENTRY ── */
-  .strain-block{margin-bottom:1rem}
-  .strain-header{
-    display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;
-  }
-  .strain-name-input{
-    background:var(--bg);border:1px solid var(--border);color:var(--text);
-    font-family:var(--font-mono);font-size:.82rem;padding:.35rem .6rem;
-    border-radius:6px;flex:1;transition:border-color .2s;
-  }
-  .strain-name-input:focus{outline:none;border-color:var(--green)}
-  .btn-del{
-    background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);
-    color:var(--red);border-radius:6px;width:28px;height:28px;
-    cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;
-    transition:all .2s;flex-shrink:0;
-  }
-  .btn-del:hover{background:rgba(248,81,73,.25)}
-  .values-input{
-    background:var(--bg);border:1px solid var(--border);color:var(--text);
-    font-family:var(--font-mono);font-size:.8rem;padding:.5rem .75rem;
-    border-radius:6px;width:100%;transition:border-color .2s;
-    resize:none;height:52px;line-height:1.4;
-  }
-  .values-input:focus{outline:none;border-color:var(--green)}
-  .values-hint{color:var(--muted);font-size:.7rem;margin-top:.25rem}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.panel-head{padding:.85rem 1.1rem;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:.6rem}
+.panel-head h2{font-size:.78rem;font-weight:600;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;font-family:var(--fm)}
+.ph-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.panel-body{padding:1.1rem}
 
-  .btn-add{
-    background:rgba(63,185,80,.1);border:1px dashed rgba(63,185,80,.4);
-    color:var(--green);border-radius:8px;width:100%;padding:.6rem;
-    cursor:pointer;font-family:var(--font-body);font-size:.85rem;
-    transition:all .2s;margin-top:.5rem;
-  }
-  .btn-add:hover{background:rgba(63,185,80,.2);border-style:solid}
+.strain-block{margin-bottom:.8rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.75rem;transition:border-color .2s}
+.strain-block:focus-within{border-color:rgba(74,222,128,.4)}
+.strain-header{display:flex;align-items:center;gap:.5rem;margin-bottom:.45rem}
+.cdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sname{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.82rem;padding:.2rem .3rem;flex:1;transition:border-color .2s}
+.sname:focus{outline:none;border-color:var(--green)}
+.sdel{background:transparent;border:1px solid transparent;color:var(--muted);border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.sdel:hover{background:rgba(248,113,113,.15);border-color:rgba(248,113,113,.3);color:var(--red)}
+.svals{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.78rem;padding:.3rem .3rem;width:100%;transition:border-color .2s;resize:none;height:44px}
+.svals:focus{outline:none;border-color:var(--green)}
+.shint{color:var(--muted);font-size:.67rem;margin-top:.2rem;font-family:var(--fm)}
 
-  .alpha-row{display:flex;align-items:center;gap:.75rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
-  .alpha-row label{font-size:.82rem;color:var(--muted);flex-shrink:0}
-  .alpha-select{
-    background:var(--bg);border:1px solid var(--border);color:var(--text);
-    font-family:var(--font-mono);font-size:.82rem;padding:.3rem .5rem;border-radius:6px;
-  }
-  .unit-input{
-    background:var(--bg);border:1px solid var(--border);color:var(--text);
-    font-family:var(--font-mono);font-size:.82rem;padding:.3rem .6rem;
-    border-radius:6px;flex:1;
-  }
-  .unit-input:focus,.alpha-select:focus{outline:none;border-color:var(--green)}
+.btn-add-s{background:transparent;border:1px dashed rgba(74,222,128,.3);color:rgba(74,222,128,.75);border-radius:8px;width:100%;padding:.55rem;cursor:pointer;font-family:var(--fb);font-size:.82rem;transition:all .2s}
+.btn-add-s:hover{background:rgba(74,222,128,.07);border-style:solid;color:var(--green)}
 
-  .btn-run{
-    background:linear-gradient(135deg,var(--green2),#196c2e);
-    border:none;color:#fff;font-family:var(--font-body);font-size:.95rem;font-weight:600;
-    padding:.85rem 1.5rem;border-radius:8px;width:100%;cursor:pointer;
-    margin-top:1.25rem;transition:all .25s;letter-spacing:.03em;
-    box-shadow:0 4px 15px rgba(63,185,80,.2);
-  }
-  .btn-run:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(63,185,80,.3)}
-  .btn-run:active{transform:translateY(0)}
+.cfg-row{display:flex;align-items:center;gap:.55rem;padding-top:.85rem;border-top:1px solid var(--border);margin-top:.85rem;flex-wrap:wrap}
+.cfg-lbl{font-size:.74rem;color:var(--muted);font-family:var(--fm);flex-shrink:0}
+.cfg-sel,.cfg-inp{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--fm);font-size:.78rem;padding:.3rem .5rem;border-radius:6px;transition:border-color .2s}
+.cfg-sel:focus,.cfg-inp:focus{outline:none;border-color:var(--green)}
+.cfg-inp{flex:1;min-width:60px}
 
-  /* ── RIGHT PANEL ── */
-  .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2)}
-  .tab{
-    padding:.75rem 1.25rem;font-size:.83rem;color:var(--muted);cursor:pointer;
-    border-bottom:2px solid transparent;transition:all .2s;font-weight:500;
-    white-space:nowrap;
-  }
-  .tab.active{color:var(--green);border-bottom-color:var(--green)}
-  .tab:hover:not(.active){color:var(--text)}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2);overflow-x:auto}
+.tab{padding:.65rem 1rem;font-size:.78rem;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;font-weight:600;white-space:nowrap;font-family:var(--fm);letter-spacing:.02em}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover:not(.active){color:var(--text)}
+.tc{display:none;padding:1.25rem}
+.tc.active{display:block}
 
-  .tab-content{display:none;padding:1.5rem}
-  .tab-content.active{display:block}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+@media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
+.cc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+.cct{font-family:var(--fm);font-size:.68rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.45rem}
+.ccp{font-size:.73rem;color:var(--muted);margin-top:.45rem;font-style:italic;line-height:1.4}
+.cw{position:relative;height:228px}
+.cf{grid-column:1/-1}
 
-  /* ── CHARTS ── */
-  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
-  @media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
-  .chart-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem}
-  .chart-box h3{font-size:.78rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:.75rem;letter-spacing:.05em;text-transform:uppercase}
-  .chart-wrap{position:relative;height:240px}
-  .chart-full{grid-column:1/-1}
+.dtbl{width:100%;border-collapse:collapse;font-size:.81rem}
+.dtbl th{text-align:left;padding:.5rem .75rem;font-family:var(--fm);font-size:.67rem;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);letter-spacing:.06em;text-transform:uppercase}
+.dtbl td{padding:.48rem .75rem;border-bottom:1px solid rgba(42,45,53,.5);font-family:var(--fm);font-size:.78rem}
+.dtbl tr:last-child td{border-bottom:none}
+.dtbl tr:hover td{background:rgba(255,255,255,.02)}
+.tn{font-family:var(--fb)!important;font-size:.83rem!important}
+.sy{color:var(--red)}.sn{color:var(--green)}
+.lchip{display:inline-block;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:var(--green);font-family:var(--fm);font-size:.71rem;padding:.1rem .4rem;border-radius:4px;font-weight:700}
 
-  /* ── STATS TABLE ── */
-  .stat-table{width:100%;border-collapse:collapse;font-size:.83rem}
-  .stat-table th{
-    text-align:left;padding:.5rem .75rem;font-family:var(--font-mono);
-    font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--border);
-    letter-spacing:.06em;text-transform:uppercase;background:var(--surface2);
-  }
-  .stat-table td{padding:.5rem .75rem;border-bottom:1px solid rgba(48,54,61,.5)}
-  .stat-table tr:last-child td{border-bottom:none}
-  .stat-table tr:hover td{background:rgba(255,255,255,.02)}
-  .mono{font-family:var(--font-mono);font-size:.8rem}
-  .sig-yes{color:var(--red);font-weight:600}
-  .sig-no{color:var(--green)}
-  .letter-badge{
-    display:inline-block;background:rgba(63,185,80,.15);border:1px solid rgba(63,185,80,.3);
-    color:var(--green);font-family:var(--font-mono);font-size:.75rem;
-    padding:.1rem .45rem;border-radius:4px;font-weight:600;
-  }
+.chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1rem}
+.chip{padding:.32rem .8rem;border-radius:999px;font-size:.74rem;font-family:var(--fm);border:1px solid}
+.chip-sig{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:var(--red)}
+.chip-ok{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.35);color:var(--green)}
+.chip-info{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:var(--accent)}
 
-  /* ── ANOVA TABLE ── */
-  .anova-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
-  .anova-header{padding:.75rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border)}
-  .anova-header h3{font-size:.8rem;font-family:var(--font-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-  .result-chips{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.25rem}
-  .chip{
-    padding:.4rem .9rem;border-radius:999px;font-size:.8rem;font-family:var(--font-mono);
-    border:1px solid;
-  }
-  .chip-sig{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.4);color:var(--red)}
-  .chip-ns{background:rgba(63,185,80,.1);border-color:rgba(63,185,80,.4);color:var(--green)}
-  .chip-neutral{background:rgba(88,166,255,.1);border-color:rgba(88,166,255,.3);color:var(--accent)}
+.alist{display:grid;gap:.55rem}
+.aitm{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem;display:flex;align-items:center;gap:.7rem}
+.aico{font-size:.95rem;flex-shrink:0}
+.atxt strong{display:block;font-size:.82rem;margin-bottom:.08rem}
+.atxt span{font-size:.72rem;color:var(--muted);font-family:var(--fm)}
+.abadge{font-size:.69rem;font-family:var(--fm);padding:.18rem .45rem;border-radius:4px;flex-shrink:0;border:1px solid}
+.ab-ok{background:rgba(74,222,128,.1);color:var(--green);border-color:rgba(74,222,128,.3)}
+.ab-fail{background:rgba(248,113,113,.1);color:var(--red);border-color:rgba(248,113,113,.3)}
 
-  /* ── SUPUESTOS ── */
-  .assume-grid{display:grid;gap:.75rem}
-  .assume-item{
-    background:var(--bg);border:1px solid var(--border);border-radius:8px;
-    padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;
-  }
-  .assume-icon{font-size:1.1rem;flex-shrink:0}
-  .assume-text{flex:1}
-  .assume-text strong{display:block;font-size:.83rem;margin-bottom:.1rem}
-  .assume-text span{font-size:.76rem;color:var(--muted);font-family:var(--font-mono)}
-  .assume-badge{
-    font-size:.72rem;font-family:var(--font-mono);padding:.2rem .5rem;
-    border-radius:4px;flex-shrink:0;
-  }
-  .ok{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3)}
-  .fail{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.3)}
+.hmt{border-collapse:collapse;width:100%}
+.hmt th,.hmt td{padding:.38rem .55rem;text-align:center;font-family:var(--fm);font-size:.72rem;border:1px solid var(--border)}
+.hmt th{color:var(--muted);background:var(--surface2);font-size:.66rem;letter-spacing:.05em}
 
-  /* ── EMPTY STATE ── */
-  .empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
-  .empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.4}
-  .empty p{font-size:.9rem}
+.slbl{font-family:var(--fm);font-size:.66rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem;margin-top:1.1rem;padding-bottom:.22rem;border-bottom:1px solid var(--border)}
+.slbl:first-child{margin-top:0}
 
-  /* ── HEATMAP ── */
-  #heatmap-container{overflow-x:auto}
-  .heatmap-table{border-collapse:collapse;font-size:.78rem;width:100%}
-  .heatmap-table th,.heatmap-table td{padding:.45rem .65rem;text-align:center;font-family:var(--font-mono)}
-  .heatmap-table th{color:var(--muted);font-size:.7rem;letter-spacing:.04em}
+.empty-s{text-align:center;padding:3.5rem 2rem;color:var(--muted)}
+.empty-s .ei{font-size:2.5rem;opacity:.35;margin-bottom:.7rem}
+.empty-s p{font-size:.85rem}
 
-  /* scroll */
-  ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:var(--bg)}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.nbox{background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.2);border-radius:8px;padding:.7rem 1rem;font-size:.77rem;color:rgba(74,222,128,.85);line-height:1.5;margin-top:1rem}
+.nbox strong{display:block;margin-bottom:.2rem}
 
-  .section-label{font-size:.72rem;font-family:var(--font-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.6rem;margin-top:1.2rem}
-  .section-label:first-child{margin-top:0}
+.lgrid{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1rem}
+.litm{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.38rem .8rem;display:flex;align-items:center;gap:.55rem;font-size:.8rem}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ═══════════ PRINT ═══════════ */
+@media print{
+  @page{size:letter portrait;margin:2.5cm 3cm 3cm 3.5cm}
+  *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+
+  body{background:#fff!important;color:#111!important;font-family:'Source Serif 4','Georgia','Times New Roman',serif!important;font-size:11.5pt!important;line-height:1.75!important}
+
+  /* hide screen-only */
+  .topbar,.grid-app > .panel:first-child,.tabs,.btn,.btn-add-s,.cfg-row,.no-print{display:none!important}
+
+  /* unwrap */
+  .grid-app,.main-wrap{display:block!important;padding:0!important;max-width:100%!important}
+  .panel{border:none!important;background:#fff!important;border-radius:0!important;box-shadow:none!important}
+  .tc{display:block!important;padding:0!important;margin-bottom:1.8cm!important}
+
+  /* print masthead */
+  .print-masthead{display:block!important}
+
+  /* section titles */
+  .psec{display:block!important;font-size:13pt!important;font-weight:700!important;font-family:'Playfair Display','Georgia',serif!important;color:#000!important;margin:0 0 .5cm!important;border-bottom:2.5pt solid #000!important;padding-bottom:.2cm!important;page-break-after:avoid}
+
+  /* figures */
+  .charts-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:.8cm!important;page-break-inside:avoid}
+  .cc{border:1pt solid #999!important;border-radius:3pt!important;padding:.45cm!important;background:#fff!important;page-break-inside:avoid}
+  .cw{height:185px!important}
+  .cf{grid-column:1/-1!important}
+  .cct{color:#222!important;font-size:9pt!important;font-weight:700!important;letter-spacing:.04em!important;display:none}
+  .ccp{color:#444!important;font-size:9pt!important;margin-top:.3cm!important}
+  .fig-num{display:block!important;font-size:9.5pt!important;font-weight:700!important;margin-bottom:.12cm!important;color:#000!important}
+
+  /* APA-style tables */
+  .dtbl{width:100%!important;border-collapse:collapse!important;font-size:10pt!important;font-family:'JetBrains Mono','Courier New',monospace!important;margin:0!important}
+  .dtbl th{border-top:2pt solid #000!important;border-bottom:1pt solid #000!important;background:#fff!important;color:#000!important;font-size:9pt!important;padding:.22cm .35cm!important;font-family:'JetBrains Mono','Courier New',monospace!important}
+  .dtbl td{padding:.18cm .35cm!important;border:none!important;color:#000!important;font-family:'JetBrains Mono','Courier New',monospace!important}
+  .dtbl tbody tr:last-child td{border-bottom:2pt solid #000!important}
+  .tn{font-family:'Source Serif 4','Georgia',serif!important;font-size:10.5pt!important}
+  .sy{color:#900!important;font-weight:700!important}
+  .sn{color:#1a5c1a!important;font-weight:700!important}
+  .lchip{background:#f0f0f0!important;border-color:#999!important;color:#000!important;font-weight:700!important}
+  .dtbl-note{font-size:9pt!important;color:#444!important;font-style:italic!important;margin-top:.2cm!important}
+
+  /* chips */
+  .chips{margin-bottom:.4cm!important}
+  .chip{border:1pt solid #888!important;background:#f5f5f5!important;color:#111!important;font-size:9pt!important}
+
+  /* assume */
+  .alist{gap:.25cm!important}
+  .aitm{border:1pt solid #ccc!important;background:#fff!important;padding:.22cm .38cm!important}
+  .atxt strong{color:#000!important}
+  .atxt span{color:#444!important}
+  .ab-ok{background:#e8f5e9!important;color:#1a5c1a!important;border-color:#4caf50!important}
+  .ab-fail{background:#ffebee!important;color:#900!important;border-color:#f44336!important}
+
+  .slbl{color:#000!important;border-color:#000!important;font-size:8pt!important}
+
+  /* heatmap */
+  .hmt th{background:#f0f0f0!important;color:#000!important}
+  .hmt th,.hmt td{border-color:#aaa!important;color:#000!important}
+
+  /* letter grid */
+  .lgrid{gap:.22cm!important}
+  .litm{border:1pt solid #ccc!important;background:#f8f8f8!important;color:#000!important}
+
+  .nbox{border-color:#999!important;background:#f5f5f5!important;color:#333!important}
+
+  /* page breaks */
+  .pb{page-break-before:always!important}
+
+  .panel-head{display:none!important}
+}
+
+/* Print masthead — hidden on screen */
+.print-masthead{display:none;text-align:center;margin-bottom:1cm;padding-bottom:.6cm;border-bottom:2.5pt solid #000}
+.pm-title{font-family:'Playfair Display',serif;font-size:16pt;font-weight:700;margin-bottom:.25cm;color:#000}
+.pm-sub{font-size:10.5pt;color:#333;margin-bottom:.1cm}
+.pm-date{font-size:9.5pt;color:#555}
+
+/* Fig number label — hidden on screen */
+.fig-num{display:none}
+/* Section heading for print — hidden on screen */
+.psec{display:none}
+/* Print table note */
+.dtbl-note{font-size:.73rem;color:var(--muted);font-style:italic;margin-top:.35rem}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="badge">Análisis Estadístico · Bacterias Productoras de IAA</div>
-    <h1>ANOVA + <em>Tukey HSD</em></h1>
-    <p class="subtitle">Ingresa tus datos, calcula y visualiza diferencias entre cepas bacterianas</p>
-  </div>
-</header>
-
-<div class="container">
-  <div class="grid-main">
-
-    <!-- ── LEFT: DATA ENTRY ── -->
+<div class="topbar">
+  <div class="topbar-inner">
     <div>
-      <div class="panel">
-        <div class="panel-head"><div class="dot"></div><h2>Ingreso de Datos</h2></div>
-        <div class="panel-body">
-          <div class="section-label">Cepas bacterianas</div>
-          <div id="strains-container"></div>
-          <button class="btn-add" onclick="addStrain()">＋ Agregar cepa</button>
-
-          <div class="alpha-row">
-            <label>α =</label>
-            <select class="alpha-select" id="alpha-sel">
-              <option value="0.05" selected>0.05</option>
-              <option value="0.01">0.01</option>
-              <option value="0.001">0.001</option>
-            </select>
-            <label>Unidad:</label>
-            <input class="unit-input" id="unit-inp" value="µg/mL" placeholder="µg/mL"/>
-          </div>
-
-          <button class="btn-run" onclick="runAnalysis()">⚡ Calcular análisis</button>
-        </div>
-      </div>
+      <div class="brand-tag">Análisis estadístico · Bacterias IAA</div>
+      <h1 class="brand-title">ANOVA + <em>Tukey HSD</em></h1>
     </div>
-
-    <!-- ── RIGHT: RESULTS ── -->
-    <div class="panel" id="results-panel">
-      <div class="tabs" id="tabs">
-        <div class="tab active" onclick="switchTab('charts')">📊 Gráficas</div>
-        <div class="tab" onclick="switchTab('anova')">🔬 ANOVA</div>
-        <div class="tab" onclick="switchTab('tukey')">📋 Tukey HSD</div>
-        <div class="tab" onclick="switchTab('supuestos')">✅ Supuestos</div>
-      </div>
-
-      <!-- CHARTS -->
-      <div class="tab-content active" id="tab-charts">
-        <div id="charts-empty" class="empty">
-          <div class="empty-icon">🧫</div>
-          <p>Ingresa tus datos y presiona<br><strong>Calcular análisis</strong></p>
-        </div>
-        <div id="charts-content" style="display:none">
-          <div class="charts-grid">
-            <div class="chart-box">
-              <h3>Media ± Error Estándar</h3>
-              <div class="chart-wrap"><canvas id="barChart"></canvas></div>
-            </div>
-            <div class="chart-box">
-              <h3>Distribución (boxplot)</h3>
-              <div class="chart-wrap"><canvas id="boxChart"></canvas></div>
-            </div>
-            <div class="chart-box chart-full">
-              <h3>Mapa de calor — p-valores Tukey</h3>
-              <div id="heatmap-container"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ANOVA -->
-      <div class="tab-content" id="tab-anova">
-        <div id="anova-empty" class="empty"><div class="empty-icon">📐</div><p>Ejecuta el análisis primero</p></div>
-        <div id="anova-content" style="display:none"></div>
-      </div>
-
-      <!-- TUKEY -->
-      <div class="tab-content" id="tab-tukey">
-        <div id="tukey-empty" class="empty"><div class="empty-icon">🔍</div><p>Ejecuta el análisis primero</p></div>
-        <div id="tukey-content" style="display:none"></div>
-      </div>
-
-      <!-- SUPUESTOS -->
-      <div class="tab-content" id="tab-supuestos">
-        <div id="sup-empty" class="empty"><div class="empty-icon">✅</div><p>Ejecuta el análisis primero</p></div>
-        <div id="sup-content" style="display:none"></div>
-      </div>
+    <div class="topbar-actions">
+      <button class="btn btn-secondary" onclick="addStrain()">＋ Nueva cepa</button>
+      <button class="btn btn-primary" onclick="runAnalysis()">⚡ Calcular</button>
+      <button class="btn btn-print" onclick="printReport()">🖨 Imprimir reporte</button>
     </div>
-
   </div>
 </div>
 
-<script>
-/* ═══════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════ */
-let strainId = 0;
-const PALETTE = ['#3fb950','#58a6ff','#e3b341','#f85149','#bc8cff','#39d353','#79c0ff','#ffb347','#ff7b72','#d2a8ff'];
-let charts = {};
+<div class="main-wrap">
+<div class="grid-app">
 
-const DEFAULTS = [
-  {name:"Cepa A", vals:"45.2, 47.8, 44.1, 46.5, 45.9"},
-  {name:"Cepa B", vals:"62.3, 65.1, 63.7, 64.0, 61.8"},
-  {name:"Cepa C", vals:"38.4, 40.2, 37.9, 39.1, 38.8"},
-  {name:"Cepa D", vals:"71.5, 73.2, 70.8, 72.1, 74.0"},
-];
+  <!-- LEFT PANEL -->
+  <div class="no-print">
+    <div class="panel">
+      <div class="panel-head"><div class="ph-dot"></div><h2>Ingreso de datos</h2></div>
+      <div class="panel-body">
+        <div class="slbl">Cepas bacterianas</div>
+        <div id="sc"></div>
+        <button class="btn-add-s" onclick="addStrain()">＋ Agregar cepa</button>
 
-/* ═══════════════════════════════════════════════
-   STRAIN UI
-═══════════════════════════════════════════════ */
-function addStrain(name='', vals=''){
-  const id = strainId++;
-  const col = PALETTE[id % PALETTE.length];
-  const div = document.createElement('div');
-  div.className = 'strain-block';
-  div.id = `sb-${id}`;
-  div.innerHTML = `
-    <div class="strain-header">
-      <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
-      <input class="strain-name-input" value="${name || 'Cepa '+(id+1)}" placeholder="Nombre cepa"/>
-      <button class="btn-del" onclick="removeStrain(${id})">✕</button>
-    </div>
-    <textarea class="values-input" placeholder="45.2, 47.8, 44.1, 46.5 ...">${vals}</textarea>
-    <div class="values-hint">Separa valores con comas o espacios</div>`;
-  document.getElementById('strains-container').appendChild(div);
-}
+        <div class="cfg-row">
+          <span class="cfg-lbl">α =</span>
+          <select class="cfg-sel" id="asel">
+            <option value="0.05" selected>0.05</option>
+            <option value="0.01">0.01</option>
+            <option value="0.001">0.001</option>
+          </select>
+          <span class="cfg-lbl">Unidad:</span>
+          <input class="cfg-inp" id="unit" value="µg/mL"/>
+        </div>
 
-function removeStrain(id){
-  const el = document.getElementById(`sb-${id}`);
-  if(el) el.remove();
-}
-
-function getData(){
-  const blocks = document.querySelectorAll('.strain-block');
-  const result = [];
-  for(const b of blocks){
-    const name = b.querySelector('.strain-name-input').value.trim() || 'Sin nombre';
-    const raw  = b.querySelector('.values-input').value;
-    const vals = raw.split(/[\s,;]+/).map(Number).filter(v => !isNaN(v) && v !== '');
-    if(vals.length >= 2) result.push({name, vals});
-  }
-  return result;
-}
-
-/* ═══════════════════════════════════════════════
-   STATISTICS
-═══════════════════════════════════════════════ */
-const mean = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
-const variance = (arr,ddof=1) => {
-  const m=mean(arr); return arr.reduce((s,v)=>s+(v-m)**2,0)/(arr.length-ddof);
-};
-const std = (arr,ddof=1) => Math.sqrt(variance(arr,ddof));
-const se  = arr => std(arr)/Math.sqrt(arr.length);
-
-// Shapiro-Wilk approximation (W statistic simplified via correlation with normal scores)
-function shapiroWilk(x){
-  x = [...x].sort((a,b)=>a-b);
-  const n = x.length;
-  if(n < 3) return {W:1, p:1};
-  const m = mean(x);
-  const s2 = x.reduce((s,v)=>s+(v-m)**2,0);
-  // approximate expected order stats
-  const mi = x.map((_,i)=>{ const p=(i+1-.375)/(n+.25); return qnorm(p); });
-  const dot = x.reduce((s,v,i)=>s+v*mi[i],0);
-  const mi2 = mi.reduce((s,v)=>s+v*v,0);
-  const W = dot*dot/(s2*mi2);
-  // approximate p via log transform
-  const mu = -1.2725 + 1.0521*Math.log(n);
-  const sigma = 1.0308 - 0.26763*Math.log(n);
-  const z = (Math.log(1-W)-mu)/sigma;
-  const p = 1 - pnorm(z);
-  return {W: Math.max(0,Math.min(1,W)), p: Math.max(0,Math.min(1,p))};
-}
-
-// Standard normal CDF (Hart approximation)
-function pnorm(x){
-  const t=1/(1+.2316419*Math.abs(x));
-  const p=t*((.319381530+t*(-.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429)))));
-  return x>=0 ? 1-p*Math.exp(-x*x/2)/Math.sqrt(2*Math.PI) : p*Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
-}
-function qnorm(p){
-  // Beasley-Springer-Moro
-  if(p<=0) return -38; if(p>=1) return 38;
-  const a=[2.50662823884,-18.61500062529,41.39119773534,-25.44106049637];
-  const b=[-8.47351093090,23.08336743743,-21.06224101826,3.13082909833];
-  const c=[0.3374754822726147,0.9761690190917186,0.1607979714918209,0.0276438810333863,0.0038405729373609,0.0003951896511349,0.0000321767881768,0.0000002888167364,0.0000003960315187];
-  const y=p-.5;
-  if(Math.abs(y)<.42){const r=y*y;return y*(((a[3]*r+a[2])*r+a[1])*r+a[0])/((((b[3]*r+b[2])*r+b[1])*r+b[0])*r+1);}
-  const r=p<.5?Math.log(-Math.log(p)):Math.log(-Math.log(1-p));
-  let x=c[0]+r*(c[1]+r*(c[2]+r*(c[3]+r*(c[4]+r*(c[5]+r*(c[6]+r*(c[7]+r*c[8])))))));
-  return p<.5?-x:x;
-}
-
-// Levene test
-function levene(groups){
-  const z = groups.map(g=>{ const m=mean(g); return g.map(v=>Math.abs(v-m)); });
-  return anova(z);
-}
-
-// One-way ANOVA
-function anova(groups){
-  const allVals = groups.flat();
-  const N = allVals.length; const k = groups.length;
-  const gm = mean(allVals);
-  const SSb = groups.reduce((s,g)=>s+g.length*(mean(g)-gm)**2,0);
-  const SSw = groups.reduce((s,g)=>s+g.reduce((q,v)=>q+(v-mean(g))**2,0),0);
-  const dfb = k-1, dfw = N-k;
-  const MSb = SSb/dfb, MSw = SSw/dfw;
-  const F = MSb/MSw;
-  const p = 1-fCDF(F,dfb,dfw);
-  const eta2 = SSb/(SSb+SSw);
-  return {F,p,dfb,dfw,SSb,SSw,MSb,MSw,N,k,eta2};
-}
-
-// F CDF approximation via regularized incomplete beta
-function fCDF(x,d1,d2){
-  const bt = d2/(d2+d1*x);
-  return 1-betaInc(bt,d2/2,d1/2);
-}
-function betaInc(x,a,b){
-  if(x<0||x>1)return 0;
-  if(x===0)return 0; if(x===1)return 1;
-  const lbeta = lgamma(a)+lgamma(b)-lgamma(a+b);
-  const front = Math.exp(Math.log(x)*a+Math.log(1-x)*b-lbeta)/a;
-  return front*betaCF(x,a,b);
-}
-function betaCF(x,a,b){
-  const MAX=200,EPS=3e-7;
-  const qab=a+b,qap=a+1,qam=a-1;
-  let c=1,d=1-qab*x/qap;
-  if(Math.abs(d)<1e-30)d=1e-30; d=1/d;
-  let h=d;
-  for(let m=1;m<=MAX;m++){
-    const m2=2*m;
-    let aa=m*(b-m)*x/((qam+m2)*(a+m2));
-    d=1+aa*d; if(Math.abs(d)<1e-30)d=1e-30;
-    c=1+aa/c; if(Math.abs(c)<1e-30)c=1e-30;
-    d=1/d; h*=d*c;
-    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
-    d=1+aa*d; if(Math.abs(d)<1e-30)d=1e-30;
-    c=1+aa/c; if(Math.abs(c)<1e-30)c=1e-30;
-    d=1/d; const del=d*c; h*=del;
-    if(Math.abs(del-1)<EPS)break;
-  }
-  return h;
-}
-function lgamma(z){
-  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
-  let x=z,y=z,tmp=x+5.5;
-  tmp-=(x+.5)*Math.log(tmp);
-  let ser=1.000000000190015;
-  for(let i=0;i<6;i++)ser+=c[i]/++y;
-  return -tmp+Math.log(2.5066282746310005*ser/x);
-}
-
-// Studentized range distribution (q) — approximation for Tukey
-function qTukey(p,k,df){
-  // approximation via binary search on pTukey
-  let lo=0,hi=20;
-  for(let i=0;i<80;i++){
-    const mid=(lo+hi)/2;
-    if(pTukey(mid,k,df)<p) lo=mid; else hi=mid;
-  }
-  return (lo+hi)/2;
-}
-function pTukey(q,k,df){
-  // Lund & Lund integration approximation
-  if(q<=0)return 0;
-  const steps=100;
-  const b=q/Math.sqrt(2);
-  let sum=0;
-  for(let i=0;i<steps;i++){
-    const t1=(i/steps)*10,t2=((i+1)/steps)*10;
-    for(const t of [t1,t2]){
-      const z=b*t;
-      const chi=Math.exp(-t*t/2)*Math.sqrt(2/Math.PI);
-      const phi=2*pnorm(z)-1;
-      sum+=chi*Math.pow(phi,k-1);
-    }
-  }
-  return Math.min(1,sum*(10/steps)/2);
-}
-
-// Tukey HSD all pairs
-function tukeyHSD(groups, alpha){
-  const names = groups.map(g=>g.name);
-  const vals  = groups.map(g=>g.vals);
-  const {F,dfw,MSw} = anova(vals);
-  const pairs=[];
-  for(let i=0;i<names.length;i++){
-    for(let j=i+1;j<names.length;j++){
-      const diff = mean(vals[i])-mean(vals[j]);
-      const ni=vals[i].length, nj=vals[j].length;
-      const se_q = Math.sqrt(MSw/2*(1/ni+1/nj));
-      const q = Math.abs(diff)/se_q;
-      // p-value via studentized range (approximate)
-      const p = 1-pTukey(q, names.length, dfw);
-      const q_crit = qTukey(1-alpha, names.length, dfw);
-      const hsd = q_crit * se_q;
-      pairs.push({g1:names[i],g2:names[j],diff,q,p:Math.min(1,Math.max(0,p)),hsd,sig:Math.abs(diff)>hsd});
-    }
-  }
-  return pairs;
-}
-
-// Compact letter display
-function compactLetters(groups, pairs){
-  const names = groups.map(g=>g.name);
-  const n = names.length;
-  // adjacency: same letter if NOT significant
-  let sets = names.map((_,i)=>new Set([i]));
-  for(const p of pairs){
-    if(!p.sig){
-      const i=names.indexOf(p.g1), j=names.indexOf(p.g2);
-      // merge sets
-      const si=sets[i], sj=sets[j];
-      if(![...si].some(x=>[...sj].includes(x))){
-        const merged=new Set([...si,...sj]);
-        for(const idx of merged){ sets[idx]=merged; }
-      }
-    }
-  }
-  // deduplicate sets
-  const unique=[...new Set(sets.map(s=>JSON.stringify([...s].sort((a,b)=>a-b))))].map(s=>JSON.parse(s));
-  const letters={};
-  names.forEach(n=>letters[n]=[]);
-  unique.forEach((grp,li)=>{ grp.forEach(idx=>{ letters[names[idx]].push(String.fromCharCode(97+li)); }); });
-  names.forEach(n=>{ letters[n]=letters[n].join(''); });
-  return letters;
-}
-
-/* ═══════════════════════════════════════════════
-   MAIN ANALYSIS
-═══════════════════════════════════════════════ */
-function runAnalysis(){
-  const groups = getData();
-  if(groups.length < 2){ alert('Necesitas al menos 2 cepas con datos válidos.'); return; }
-  const alpha = parseFloat(document.getElementById('alpha-sel').value);
-  const unit  = document.getElementById('unit-inp').value || 'µg/mL';
-
-  const anovaRes = anova(groups.map(g=>g.vals));
-  const pairs    = tukeyHSD(groups, alpha);
-  const letters  = compactLetters(groups, pairs);
-  const shapiros = groups.map(g=>({ name:g.name, ...shapiroWilk(g.vals) }));
-  const levRes   = levene(groups.map(g=>g.vals));
-
-  renderCharts(groups, pairs, letters, unit, alpha);
-  renderAnova(anovaRes, alpha, unit);
-  renderTukey(pairs, letters, alpha, unit);
-  renderSupuestos(shapiros, levRes, alpha);
-
-  // show content
-  ['charts','anova','tukey','supuestos'].forEach(t=>{
-    document.getElementById(`${t==='charts'?'charts':t}-empty`)&&(document.getElementById(`${t==='charts'?'charts':t}-empty`).style.display='none');
-  });
-  document.getElementById('charts-empty').style.display='none';
-  document.getElementById('charts-content').style.display='block';
-  document.getElementById('anova-empty').style.display='none';
-  document.getElementById('anova-content').style.display='block';
-  document.getElementById('tukey-empty').style.display='none';
-  document.getElementById('tukey-content').style.display='block';
-  document.getElementById('sup-empty').style.display='none';
-  document.getElementById('sup-content').style.display='block';
-}
-
-/* ═══════════════════════════════════════════════
-   RENDER CHARTS
-═══════════════════════════════════════════════ */
-function renderCharts(groups, pairs, letters, unit, alpha){
-  const names = groups.map(g=>g.name);
-  const means = groups.map(g=>mean(g.vals));
-  const errors= groups.map(g=>se(g.vals));
-  const colors= groups.map((_,i)=>PALETTE[i%PALETTE.length]);
-
-  // destroy old charts
-  ['barChart','boxChart'].forEach(id=>{ if(charts[id]){charts[id].destroy();delete charts[id];} });
-
-  // ── Bar chart ──
-  const barCtx = document.getElementById('barChart').getContext('2d');
-  charts.barChart = new Chart(barCtx,{
-    type:'bar',
-    data:{
-      labels: names,
-      datasets:[{
-        data: means,
-        backgroundColor: colors.map(c=>c+'cc'),
-        borderColor: colors,
-        borderWidth:2,
-        borderRadius:6,
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:c=>`${c.parsed.y.toFixed(3)} ${unit}`}},
-      },
-      scales:{
-        x:{ticks:{color:'#8b949e',font:{family:'DM Mono',size:11}},grid:{color:'#30363d'}},
-        y:{ticks:{color:'#8b949e',font:{family:'DM Mono',size:10}},grid:{color:'#30363d'},
-           title:{display:true,text:unit,color:'#8b949e',font:{family:'DM Mono',size:10}}}
-      }
-    },
-    plugins:[{
-      afterDraw(chart){
-        const ctx=chart.ctx;
-        chart.data.datasets[0].data.forEach((_,i)=>{
-          const meta=chart.getDatasetMeta(0);
-          const bar=meta.data[i];
-          const x=bar.x, y=bar.y;
-          // error bar
-          const pixPerUnit=(chart.scales.y.height)/(chart.scales.y.max-chart.scales.y.min);
-          const ey=errors[i]*pixPerUnit;
-          ctx.strokeStyle='#e6edf3'; ctx.lineWidth=1.5;
-          ctx.beginPath();ctx.moveTo(x,y-ey);ctx.lineTo(x,y+ey);
-          ctx.moveTo(x-6,y-ey);ctx.lineTo(x+6,y-ey);
-          ctx.moveTo(x-6,y+ey);ctx.lineTo(x+6,y+ey);
-          ctx.stroke();
-          // letter
-          ctx.fillStyle='#e6edf3'; ctx.font='bold 12px DM Mono';
-          ctx.textAlign='center';
-          ctx.fillText(letters[names[i]].toUpperCase(), x, y-ey-10);
-        });
-      }
-    }]
-  });
-
-  // ── Box + jitter ──
-  const boxData = groups.map((g,i)=>{
-    const sorted=[...g.vals].sort((a,b)=>a-b);
-    const q1=sorted[Math.floor(sorted.length*.25)];
-    const q3=sorted[Math.floor(sorted.length*.75)];
-    const med=sorted.length%2===0?(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2:sorted[Math.floor(sorted.length/2)];
-    return {label:g.name,min:Math.min(...g.vals),q1,med,q3,max:Math.max(...g.vals),vals:g.vals,color:colors[i]};
-  });
-
-  const boxCtx = document.getElementById('boxChart').getContext('2d');
-  // Draw custom boxplot using a scatter chart
-  const jitterDatasets = groups.map((g,i)=>({
-    type:'scatter',
-    label:g.name,
-    data: g.vals.map(v=>({x:i+(Math.random()-.5)*.3, y:v})),
-    backgroundColor: colors[i]+'99',
-    pointRadius:4, showLine:false,
-    borderColor: colors[i],
-    borderWidth:1,
-  }));
-
-  charts.boxChart = new Chart(boxCtx,{
-    type:'scatter',
-    data:{ datasets: jitterDatasets },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{
-          type:'linear', min:-.5, max:groups.length-.5,
-          ticks:{
-            color:'#8b949e', font:{family:'DM Mono',size:10},
-            callback:v=>names[Math.round(v)]||'',
-            stepSize:1,
-          },
-          grid:{color:'#30363d'},
-        },
-        y:{ticks:{color:'#8b949e',font:{family:'DM Mono',size:10}},grid:{color:'#30363d'},
-           title:{display:true,text:unit,color:'#8b949e',font:{family:'DM Mono',size:10}}}
-      }
-    },
-    plugins:[{
-      afterDraw(chart){
-        const ctx=chart.ctx, sc=chart.scales;
-        boxData.forEach((b,i)=>{
-          const x=sc.x.getPixelForValue(i);
-          const w=30;
-          const yq1=sc.y.getPixelForValue(b.q1);
-          const yq3=sc.y.getPixelForValue(b.q3);
-          const ymed=sc.y.getPixelForValue(b.med);
-          const ymin=sc.y.getPixelForValue(b.min);
-          const ymax=sc.y.getPixelForValue(b.max);
-          ctx.strokeStyle=b.color; ctx.fillStyle=b.color+'33'; ctx.lineWidth=2;
-          ctx.fillRect(x-w,yq3,w*2,yq1-yq3);
-          ctx.strokeRect(x-w,yq3,w*2,yq1-yq3);
-          ctx.strokeStyle='#fff'; ctx.lineWidth=2;
-          ctx.beginPath();ctx.moveTo(x-w,ymed);ctx.lineTo(x+w,ymed);ctx.stroke();
-          ctx.strokeStyle=b.color; ctx.lineWidth=1.5;
-          ctx.beginPath();ctx.moveTo(x,yq3);ctx.lineTo(x,ymax);ctx.stroke();
-          ctx.beginPath();ctx.moveTo(x,yq1);ctx.lineTo(x,ymin);ctx.stroke();
-          ctx.beginPath();ctx.moveTo(x-w/2,ymax);ctx.lineTo(x+w/2,ymax);ctx.stroke();
-          ctx.beginPath();ctx.moveTo(x-w/2,ymin);ctx.lineTo(x+w/2,ymin);ctx.stroke();
-        });
-      }
-    }]
-  });
-
-  // ── Heatmap ──
-  const n=groups.length;
-  let html='<table class="heatmap-table"><thead><tr><th></th>';
-  names.forEach(n=>{ html+=`<th>${n}</th>`; });
-  html+='</tr></thead><tbody>';
-  names.forEach((r,i)=>{
-    html+=`<tr><th>${r}</th>`;
-    names.forEach((c,j)=>{
-      if(i===j){
-        html+=`<td style="background:#1c2330;color:#8b949e">—</td>`;
-      } else {
-        const pair=pairs.find(p=>(p.g1===r&&p.g2===c)||(p.g1===c&&p.g2===r));
-        if(pair){
-          const p=pair.p;
-          const green=Math.round(p*255), red=Math.round((1-p)*255);
-          const bg=`rgba(${red},${green},60,0.25)`;
-          const border=pair.sig?'#f85149':'#3fb950';
-          const txt=pair.sig?'★':'';
-          html+=`<td style="background:${bg};border:1px solid ${border}33;color:#e6edf3" title="p=${p.toFixed(4)}">${p.toFixed(3)} ${txt}</td>`;
-        }
-      }
-    });
-    html+='</tr>';
-  });
-  html+='</tbody></table>';
-  html+=`<p style="font-size:.72rem;color:#8b949e;margin-top:.5rem;font-family:DM Mono">★ = diferencia significativa (p < ${alpha})</p>`;
-  document.getElementById('heatmap-container').innerHTML=html;
-}
-
-/* ═══════════════════════════════════════════════
-   RENDER ANOVA
-═══════════════════════════════════════════════ */
-function renderAnova(r, alpha, unit){
-  const sig = r.p < alpha;
-  let html = `<div class="result-chips">
-    <span class="chip ${sig?'chip-sig':'chip-ns'}">F(${r.dfb},${r.dfw}) = ${r.F.toFixed(4)}</span>
-    <span class="chip ${sig?'chip-sig':'chip-ns'}">p = ${r.p<.0001?r.p.toExponential(3):r.p.toFixed(4)}</span>
-    <span class="chip chip-neutral">η² = ${r.eta2.toFixed(4)}</span>
-    <span class="chip ${sig?'chip-sig':'chip-ns'}">${sig?'✗ Diferencias significativas':'✓ Sin diferencias significativas'}</span>
-  </div>`;
-
-  html+=`<div class="anova-box"><div class="anova-header"><h3>Tabla ANOVA</h3></div>
-  <table class="stat-table">
-  <thead><tr><th>Fuente</th><th>SC</th><th>gl</th><th>CM</th><th>F</th><th>p</th></tr></thead>
-  <tbody>
-  <tr><td>Entre grupos</td><td class="mono">${r.SSb.toFixed(4)}</td><td class="mono">${r.dfb}</td><td class="mono">${r.MSb.toFixed(4)}</td><td class="mono">${r.F.toFixed(4)}</td><td class="mono ${sig?'sig-yes':'sig-no'}">${r.p<.0001?r.p.toExponential(3):r.p.toFixed(4)}</td></tr>
-  <tr><td>Dentro grupos</td><td class="mono">${r.SSw.toFixed(4)}</td><td class="mono">${r.dfw}</td><td class="mono">${r.MSw.toFixed(4)}</td><td>—</td><td>—</td></tr>
-  <tr style="font-weight:600"><td>Total</td><td class="mono">${(r.SSb+r.SSw).toFixed(4)}</td><td class="mono">${r.dfb+r.dfw}</td><td>—</td><td>—</td><td>—</td></tr>
-  </tbody></table></div>`;
-
-  html+=`<div class="section-label">Tamaño del efecto</div>
-  <div class="assume-item">
-    <span class="assume-icon">📏</span>
-    <div class="assume-text">
-      <strong>η² (Eta cuadrado) = ${r.eta2.toFixed(4)}</strong>
-      <span>${r.eta2<.06?'Efecto pequeño':r.eta2<.14?'Efecto mediano':'Efecto grande'} · ${(r.eta2*100).toFixed(1)}% de la varianza explicada</span>
-    </div>
-  </div>`;
-
-  document.getElementById('anova-content').innerHTML=html;
-}
-
-/* ═══════════════════════════════════════════════
-   RENDER TUKEY
-═══════════════════════════════════════════════ */
-function renderTukey(pairs, letters, alpha, unit){
-  let html=`<div class="section-label">Letras de agrupamiento (Tukey HSD)</div>
-  <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem">`;
-  Object.entries(letters).forEach(([name,l])=>{
-    html+=`<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:.4rem .9rem;display:flex;align-items:center;gap:.6rem">
-      <span style="font-size:.82rem">${name}</span>
-      <span class="letter-badge">${l.toUpperCase()}</span>
-    </div>`;
-  });
-  html+=`</div><p style="font-size:.75rem;color:#8b949e;margin-bottom:1.25rem">Cepas con la misma letra <strong>NO</strong> difieren significativamente (α = ${alpha})</p>`;
-
-  html+=`<div class="anova-box"><div class="anova-header"><h3>Comparaciones por par</h3></div>
-  <table class="stat-table">
-  <thead><tr><th>Grupo 1</th><th>Grupo 2</th><th>Diferencia (${unit})</th><th>q</th><th>p-ajust.</th><th>Sig.</th></tr></thead><tbody>`;
-  pairs.forEach(p=>{
-    html+=`<tr>
-      <td>${p.g1}</td><td>${p.g2}</td>
-      <td class="mono">${p.diff.toFixed(4)}</td>
-      <td class="mono">${p.q.toFixed(4)}</td>
-      <td class="mono ${p.sig?'sig-yes':'sig-no'}">${p.p<.0001?p.p.toExponential(3):p.p.toFixed(4)}</td>
-      <td>${p.sig?'<span class="sig-yes">✗ Sig.</span>':'<span class="sig-no">✓ NS</span>'}</td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div>`;
-  document.getElementById('tukey-content').innerHTML=html;
-}
-
-/* ═══════════════════════════════════════════════
-   RENDER SUPUESTOS
-═══════════════════════════════════════════════ */
-function renderSupuestos(shapiros, levRes, alpha){
-  let html=`<div class="section-label">Normalidad — Shapiro-Wilk (por cepa)</div><div class="assume-grid">`;
-  shapiros.forEach(s=>{
-    const ok=s.p>alpha;
-    html+=`<div class="assume-item">
-      <span class="assume-icon">${ok?'✅':'⚠️'}</span>
-      <div class="assume-text">
-        <strong>${s.name}</strong>
-        <span>W = ${s.W.toFixed(4)} · p = ${s.p<.0001?s.p.toExponential(3):s.p.toFixed(4)}</span>
+        <div style="margin-top:.85rem;padding-top:.85rem;border-top:1px solid var(--border)">
+          <div class="slbl" style="margin-top:0">Para el reporte impreso</div>
+          <input class="cfg-inp" id="rtitle" style="width:100%;margin-bottom:.5rem;font-family:var(--fb)" value="Producción de Ácido Indolacético (IAA) por Cepas Bacterianas" placeholder="Título del reporte"/>
+          <input class="cfg-inp" id="rauthor" style="width:100%;font-family:var(--fb)" placeholder="Autor, Facultad, Universidad"/>
+        </div>
       </div>
-      <span class="assume-badge ${ok?'ok':'fail'}">${ok?'Normal':'No normal'}</span>
-    </div>`;
-  });
-  html+=`</div>`;
-
-  const levOk=levRes.p>alpha;
-  html+=`<div class="section-label" style="margin-top:1.25rem">Homocedasticidad — Prueba de Levene</div>
-  <div class="assume-grid">
-  <div class="assume-item">
-    <span class="assume-icon">${levOk?'✅':'⚠️'}</span>
-    <div class="assume-text">
-      <strong>Levene</strong>
-      <span>F(${levRes.dfb},${levRes.dfw}) = ${levRes.F.toFixed(4)} · p = ${levRes.p<.0001?levRes.p.toExponential(3):levRes.p.toFixed(4)}</span>
     </div>
-    <span class="assume-badge ${levOk?'ok':'fail'}">${levOk?'Varianzas homogéneas':'Varianzas heterogéneas'}</span>
-  </div></div>`;
+  </div>
 
-  html+=`<div style="background:#0d2a1a;border:1px solid #196c2e;border-radius:8px;padding:.85rem 1rem;margin-top:1.25rem;font-size:.8rem;color:#3fb950;line-height:1.6">
-  <strong style="display:block;margin-bottom:.3rem">💡 Nota interpretativa</strong>
-  Si algún supuesto falla, considera usar la prueba de Kruskal-Wallis (no paramétrica) como alternativa al ANOVA, y el test de Dunn como post-hoc.
-  </div>`;
+  <!-- RIGHT PANEL -->
+  <div class="panel" id="rp">
 
-  document.getElementById('sup-content').innerHTML=html;
+    <!-- Print masthead -->
+    <div class="print-masthead" id="pm">
+      <div class="pm-title" id="pm-title"></div>
+      <div class="pm-sub" id="pm-author"></div>
+      <div class="pm-date" id="pm-date"></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="stab('charts')">📊 Figuras</div>
+      <div class="tab" onclick="stab('anova')">🔬 ANOVA</div>
+      <div class="tab" onclick="stab('tukey')">📋 Tukey HSD</div>
+      <div class="tab" onclick="stab('sup')">✅ Supuestos</div>
+      <div class="tab" onclick="stab('desc')">📈 Descriptivos</div>
+    </div>
+
+    <!-- FIGURES -->
+    <div class="tc active" id="tab-charts">
+      <div class="empty-s" id="e-charts"><div class="ei">🧫</div><p>Ingresa tus datos y presiona <strong>Calcular</strong></p></div>
+      <div id="c-charts" style="display:none">
+        <div class="psec">Figuras</div>
+        <div class="charts-grid">
+          <div class="cc">
+            <div class="fig-num" id="fn1">Figura 1.</div>
+            <div class="cct">Figura 1 — Media ± Error estándar</div>
+            <div class="cw"><canvas id="barChart"></canvas></div>
+            <div class="ccp" id="cap-bar"></div>
+          </div>
+          <div class="cc">
+            <div class="fig-num" id="fn2">Figura 2.</div>
+            <div class="cct">Figura 2 — Diagrama de caja y bigotes</div>
+            <div class="cw"><canvas id="boxChart"></canvas></div>
+            <div class="ccp" id="cap-box"></div>
+          </div>
+          <div class="cc cf">
+            <div class="fig-num" id="fn3">Figura 3.</div>
+            <div class="cct">Figura 3 — Mapa de calor: p-valores Tukey HSD</div>
+            <div id="hmap"></div>
+            <div class="ccp" id="cap-hm"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANOVA -->
+    <div class="tc" id="tab-anova">
+      <div class="empty-s" id="e-anova"><div class="ei">📐</div><p>Ejecuta el análisis primero</p></div>
+      <div id="c-anova" style="display:none"></div>
+    </div>
+
+    <!-- TUKEY -->
+    <div class="tc" id="tab-tukey">
+      <div class="empty-s" id="e-tukey"><div class="ei">🔍</div><p>Ejecuta el análisis primero</p></div>
+      <div id="c-tukey" style="display:none"></div>
+    </div>
+
+    <!-- SUPUESTOS -->
+    <div class="tc" id="tab-sup">
+      <div class="empty-s" id="e-sup"><div class="ei">✅</div><p>Ejecuta el análisis primero</p></div>
+      <div id="c-sup" style="display:none"></div>
+    </div>
+
+    <!-- DESCRIPTIVOS -->
+    <div class="tc" id="tab-desc">
+      <div class="empty-s" id="e-desc"><div class="ei">📈</div><p>Ejecuta el análisis primero</p></div>
+      <div id="c-desc" style="display:none"></div>
+    </div>
+
+  </div><!-- /rp -->
+</div>
+</div>
+
+<script>
+/* ── STATE ── */
+let sid=0;
+const PAL=['#4ade80','#60a5fa','#fbbf24','#f87171','#a78bfa','#34d399','#f472b6','#38bdf8','#fb923c','#a3e635'];
+let CH={};
+const DEF=[{n:'Cepa A',v:'45.2, 47.8, 44.1, 46.5, 45.9'},{n:'Cepa B',v:'62.3, 65.1, 63.7, 64.0, 61.8'},{n:'Cepa C',v:'38.4, 40.2, 37.9, 39.1, 38.8'},{n:'Cepa D',v:'71.5, 73.2, 70.8, 72.1, 74.0'}];
+
+/* ── UI ── */
+function addStrain(n='',v=''){
+  const id=sid++;const c=PAL[id%PAL.length];
+  const d=document.createElement('div');d.className='strain-block';d.id='sb'+id;
+  d.innerHTML=`<div class="strain-header"><span class="cdot" style="background:${c}"></span><input class="sname" value="${n||'Cepa '+(id+1)}"/><button class="sdel" onclick="rmS(${id})">✕</button></div><textarea class="svals" placeholder="45.2, 47.8, 44.1 ...">${v}</textarea><div class="shint">Separa valores con comas o espacios</div>`;
+  document.getElementById('sc').appendChild(d);
 }
-
-/* ═══════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════ */
-function switchTab(name){
-  document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['charts','anova','tukey','supuestos'];
-    t.classList.toggle('active',names[i]===name);
+function rmS(id){const e=document.getElementById('sb'+id);if(e)e.remove();}
+function getData(){
+  const r=[];
+  document.querySelectorAll('.strain-block').forEach((b,i)=>{
+    const name=b.querySelector('.sname').value.trim()||'Cepa '+(i+1);
+    const vals=b.querySelector('.svals').value.split(/[\s,;]+/).map(Number).filter(v=>!isNaN(v)&&v!=='');
+    if(vals.length>=2)r.push({name,vals,color:PAL[i%PAL.length]});
   });
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.add('active');
+  return r;
 }
 
-/* ═══════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════ */
-DEFAULTS.forEach(d=>addStrain(d.name, d.vals));
+/* ── STATS ── */
+const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const sd=(a,d=1)=>Math.sqrt(a.reduce((s,v)=>s+(v-avg(a))**2,0)/(a.length-d));
+const se=a=>sd(a)/Math.sqrt(a.length);
+const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2===0?(s[n/2-1]+s[n/2])/2:s[Math.floor(n/2)]};
+const qq1=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length*.25)]};
+const qq3=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length*.75)]};
+
+function pnorm(x){const t=1/(1+.2316419*Math.abs(x));const p=t*((.319381530+t*(-.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429)))));const pdf=Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);return x>=0?1-p*pdf:p*pdf;}
+function qnorm(p){if(p<=0)return -38;if(p>=1)return 38;const c=[2.50662823884,-18.61500062529,41.39119773534,-25.44106049637],b=[-8.47351093090,23.08336743743,-21.06224101826,3.13082909833],cc=[.3374754822726147,.9761690190917186,.1607979714918209,.0276438810333863,.0038405729373609,.0003951896511349,.0000321767881768,.0000002888167364,.0000003960315187];const y=p-.5;if(Math.abs(y)<.42){const r=y*y;return y*(((c[3]*r+c[2])*r+c[1])*r+c[0])/((((b[3]*r+b[2])*r+b[1])*r+b[0])*r+1);}const r=p<.5?Math.log(-Math.log(p)):Math.log(-Math.log(1-p));let x=cc[0]+r*(cc[1]+r*(cc[2]+r*(cc[3]+r*(cc[4]+r*(cc[5]+r*(cc[6]+r*(cc[7]+r*cc[8])))))));return p<.5?-x:x;}
+function lgam(z){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,.1208650973866179e-2,-.5395239384953e-5];let x=z,y=z,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let i=0;i<6;i++)s+=c[i]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function bCF(x,a,b){const M=200,E=3e-7,qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<1e-30)d=1e-30;d=1/d;let h=d;for(let m=1;m<=M;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;const dl=d*c;h*=dl;if(Math.abs(dl-1)<E)break;}return h;}
+function bI(x,a,b){if(x<=0)return 0;if(x>=1)return 1;return Math.exp(Math.log(x)*a+Math.log(1-x)*b-lgam(a)-lgam(b)+lgam(a+b))/a*bCF(x,a,b);}
+function fCDF(x,d1,d2){return 1-bI(d2/(d2+d1*x),d2/2,d1/2);}
+
+function shapiro(x){x=[...x].sort((a,b)=>a-b);const n=x.length;if(n<3)return{W:1,p:1};const m=avg(x),s2=x.reduce((s,v)=>s+(v-m)**2,0);const mi=x.map((_,i)=>qnorm((i+1-.375)/(n+.25)));const dot=x.reduce((s,v,i)=>s+v*mi[i],0),mi2=mi.reduce((s,v)=>s+v*v,0);const W=Math.max(0,Math.min(1,dot*dot/(s2*mi2)));const mu=-1.2725+1.0521*Math.log(n),sig=1.0308-.26763*Math.log(n),z=(Math.log(1-W)-mu)/sig;return{W,p:Math.max(0,Math.min(1,1-pnorm(z)))};}
+
+function anova(gs){const all=gs.flat(),N=all.length,k=gs.length,gm=avg(all);const SSb=gs.reduce((s,g)=>s+g.length*(avg(g)-gm)**2,0),SSw=gs.reduce((s,g)=>s+g.reduce((q,v)=>q+(v-avg(g))**2,0),0);const dfb=k-1,dfw=N-k,MSb=SSb/dfb,MSw=SSw/dfw,F=MSb/MSw,p=1-fCDF(F,dfb,dfw);return{F,p,dfb,dfw,SSb,SSw,MSb,MSw,N,k,eta2:SSb/(SSb+SSw)};}
+function levene(gs){return anova(gs.map(g=>{const m=avg(g);return g.map(v=>Math.abs(v-m));}));}
+
+function pTukey(q,k,df){if(q<=0)return 0;const steps=120,b=q/Math.sqrt(2);let s=0;for(let i=0;i<steps;i++){for(const t of [i/steps*10,(i+1)/steps*10]){const chi=Math.exp(-t*t/2)*Math.sqrt(2/Math.PI),phi=2*pnorm(b*t)-1;s+=chi*Math.pow(Math.max(0,phi),k-1);}}return Math.min(1,s*(10/steps)/2);}
+function qTukey(p,k,df){let lo=0,hi=20;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(pTukey(m,k,df)<p)lo=m;else hi=m;}return(lo+hi)/2;}
+
+function tukey(groups,alpha){const names=groups.map(g=>g.name),vals=groups.map(g=>g.vals),{dfw,MSw}=anova(vals),pairs=[];for(let i=0;i<names.length;i++){for(let j=i+1;j<names.length;j++){const diff=avg(vals[i])-avg(vals[j]),ni=vals[i].length,nj=vals[j].length,se_q=Math.sqrt(MSw/2*(1/ni+1/nj)),qv=Math.abs(diff)/se_q,p=Math.min(1,Math.max(0,1-pTukey(qv,names.length,dfw))),qc=qTukey(1-alpha,names.length,dfw),hsd=qc*se_q;pairs.push({g1:names[i],g2:names[j],diff,q:qv,p,hsd,sig:Math.abs(diff)>hsd});}}return pairs;}
+
+function cld(groups,pairs){const names=groups.map(g=>g.name);let sets=names.map((_,i)=>new Set([i]));for(const p of pairs){if(!p.sig){const i=names.indexOf(p.g1),j=names.indexOf(p.g2),si=sets[i],sj=sets[j];if(![...si].some(x=>[...sj].includes(x))){const mg=new Set([...si,...sj]);for(const idx of mg)sets[idx]=mg;}}}const uq=[...new Set(sets.map(s=>JSON.stringify([...s].sort((a,b)=>a-b))))].map(s=>JSON.parse(s));const L={};names.forEach(n=>L[n]=[]);uq.forEach((g,li)=>g.forEach(idx=>L[names[idx]].push(String.fromCharCode(97+li))));names.forEach(n=>L[n]=L[n].join(''));return L;}
+
+/* ── MAIN ── */
+function runAnalysis(){
+  const G=getData();if(G.length<2){alert('Necesitas al menos 2 cepas con datos válidos.');return;}
+  const alpha=parseFloat(document.getElementById('asel').value),unit=document.getElementById('unit').value||'µg/mL';
+  const ar=anova(G.map(g=>g.vals)),pairs=tukey(G,alpha),letters=cld(G,pairs);
+  const sw=G.map(g=>({name:g.name,...shapiro(g.vals)})),lev=levene(G.map(g=>g.vals));
+  rCharts(G,pairs,letters,unit,alpha,ar);
+  rAnova(ar,alpha,unit);rTukey(pairs,letters,alpha,unit,G);rSup(sw,lev,alpha);rDesc(G,unit,letters);
+  ['charts','anova','tukey','sup','desc'].forEach(t=>{
+    const e=document.getElementById('e-'+t),c=document.getElementById('c-'+t);
+    if(e)e.style.display='none';if(c)c.style.display='block';
+  });
+}
+
+/* ── RENDER CHARTS ── */
+function rCharts(G,pairs,letters,unit,alpha,ar){
+  const names=G.map(g=>g.name),means=G.map(g=>avg(g.vals)),errs=G.map(g=>se(g.vals)),cols=G.map(g=>g.color);
+  ['barChart','boxChart'].forEach(id=>{if(CH[id]){CH[id].destroy();delete CH[id];}});
+
+  const sig=ar.p<alpha;
+  document.getElementById('cap-bar').textContent=`Figura 1. Producción de IAA (${unit}) por cepa bacteriana. Las barras muestran la media ± error estándar. Las letras sobre las barras indican grupos homogéneos según la prueba de Tukey HSD (α = ${alpha}). ${sig?`Se observaron diferencias estadísticamente significativas entre cepas (F(${ar.dfb},${ar.dfw}) = ${ar.F.toFixed(3)}, p = ${ar.p.toFixed(4)}).`:'No se observaron diferencias estadísticamente significativas entre cepas.'}`;
+  document.getElementById('cap-box').textContent=`Figura 2. Distribución de la producción de IAA (${unit}) por cepa. Los puntos representan réplicas individuales (n = ${G.map(g=>g.vals.length).join(', ')}). La línea central indica la mediana; la caja abarca el rango intercuartílico (Q1–Q3).`;
+  document.getElementById('cap-hm').textContent=`Figura 3. Matriz de p-valores ajustados de la prueba de Tukey HSD entre pares de cepas. Los valores marcados con ★ indican diferencias estadísticamente significativas (p < ${alpha}). Escala de color: verde = sin diferencia (p alto); rojo = diferencia significativa (p bajo).`;
+
+  const barCtx=document.getElementById('barChart').getContext('2d');
+  CH.barChart=new Chart(barCtx,{type:'bar',data:{labels:names,datasets:[{data:means,backgroundColor:cols.map(c=>c+'bb'),borderColor:cols,borderWidth:2,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y.toFixed(3)} ${unit}`}}},scales:{x:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'}},y:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'},title:{display:true,text:unit,color:'#9ca3af',font:{family:'JetBrains Mono',size:10}}}}},plugins:[{afterDraw(chart){const ctx=chart.ctx;chart.data.datasets[0].data.forEach((_,i)=>{const meta=chart.getDatasetMeta(0),bar=meta.data[i],x=bar.x,y=bar.y,py=chart.scales.y.height/(chart.scales.y.max-chart.scales.y.min),ey=errs[i]*py;ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y-ey);ctx.lineTo(x,y+ey);ctx.moveTo(x-5,y-ey);ctx.lineTo(x+5,y-ey);ctx.moveTo(x-5,y+ey);ctx.lineTo(x+5,y+ey);ctx.stroke();ctx.fillStyle='#f0f4f8';ctx.font='bold 11px JetBrains Mono';ctx.textAlign='center';ctx.fillText(letters[names[i]].toUpperCase(),x,y-ey-8);});}}]});
+
+  const bxD=G.map(g=>({min:Math.min(...g.vals),q1:qq1(g.vals),med:med(g.vals),q3:qq3(g.vals),max:Math.max(...g.vals),vals:g.vals,color:g.color}));
+  const jD=G.map((g,i)=>({type:'scatter',label:g.name,data:g.vals.map(v=>({x:i+(Math.random()-.5)*.27,y:v})),backgroundColor:g.color+'88',pointRadius:4,showLine:false,borderColor:g.color,borderWidth:1}));
+  const bxCtx=document.getElementById('boxChart').getContext('2d');
+  CH.boxChart=new Chart(bxCtx,{type:'scatter',data:{datasets:jD},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:-.6,max:G.length-.4,ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10},callback:v=>names[Math.round(v)]||'',stepSize:1},grid:{color:'#2a2d35'}},y:{ticks:{color:'#9ca3af',font:{family:'JetBrains Mono',size:10}},grid:{color:'#2a2d35'},title:{display:true,text:unit,color:'#9ca3af',font:{family:'JetBrains Mono',size:10}}}}},plugins:[{afterDraw(chart){const ctx=chart.ctx,sc=chart.scales;bxD.forEach((b,i)=>{const x=sc.x.getPixelForValue(i),w=26,yq1=sc.y.getPixelForValue(b.q1),yq3=sc.y.getPixelForValue(b.q3),ym=sc.y.getPixelForValue(b.med),ymn=sc.y.getPixelForValue(b.min),ymx=sc.y.getPixelForValue(b.max);ctx.strokeStyle=b.color;ctx.fillStyle=b.color+'22';ctx.lineWidth=2;ctx.fillRect(x-w,yq3,w*2,yq1-yq3);ctx.strokeRect(x-w,yq3,w*2,yq1-yq3);ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x-w,ym);ctx.lineTo(x+w,ym);ctx.stroke();ctx.strokeStyle=b.color;ctx.lineWidth=1.5;[yq3,yq1].forEach((y,ii)=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,ii===0?ymx:ymn);ctx.stroke();ctx.beginPath();ctx.moveTo(x-w/2,ii===0?ymx:ymn);ctx.lineTo(x+w/2,ii===0?ymx:ymn);ctx.stroke();});});}}]});
+
+  const n=G.length;let h='<div style="overflow-x:auto"><table class="hmt"><thead><tr><th></th>';
+  names.forEach(nm=>h+=`<th>${nm}</th>`);h+='</tr></thead><tbody>';
+  names.forEach((r,i)=>{h+=`<tr><th>${r}</th>`;names.forEach((c,j)=>{if(i===j){h+=`<td style="background:#1c2028;color:#6b7280">—</td>`;return;}const pr=pairs.find(p=>(p.g1===r&&p.g2===c)||(p.g1===c&&p.g2===r));if(pr){const pv=pr.p,gr=Math.round(pv*180),rd=Math.round((1-pv)*180),bg=`rgba(${rd},${gr},60,0.2)`,bc=pr.sig?'rgba(248,113,113,.45)':'rgba(74,222,128,.28)';h+=`<td style="background:${bg};border:1px solid ${bc};color:#f0f4f8" title="p = ${pv.toFixed(4)}">${pv.toFixed(3)}${pr.sig?' ★':''}</td>`;}});h+='</tr>';});
+  h+=`</tbody></table></div><p style="font-size:.69rem;color:#6b7280;margin-top:.35rem;font-family:JetBrains Mono">★ = p &lt; ${alpha} (diferencia significativa)</p>`;
+  document.getElementById('hmap').innerHTML=h;
+}
+
+/* ── RENDER ANOVA ── */
+function rAnova(r,alpha,unit){
+  const sig=r.p<alpha,pf=p=>p<.0001?p.toExponential(3):p.toFixed(4);
+  document.getElementById('c-anova').innerHTML=`
+  <div class="chips">
+    <span class="chip ${sig?'chip-sig':'chip-ok'}">F(${r.dfb}, ${r.dfw}) = ${r.F.toFixed(4)}</span>
+    <span class="chip ${sig?'chip-sig':'chip-ok'}">p = ${pf(r.p)}</span>
+    <span class="chip chip-info">η² = ${r.eta2.toFixed(4)}</span>
+    <span class="chip ${sig?'chip-sig':'chip-ok'}">${sig?'✗ Diferencias significativas':'✓ Sin diferencias significativas'}</span>
+  </div>
+  <div class="slbl">Tabla 1. ANOVA de una vía</div>
+  <div style="overflow-x:auto;margin-bottom:.9rem">
+  <table class="dtbl">
+    <thead><tr><th>Fuente de variación</th><th>SC</th><th>gl</th><th>CM</th><th>F</th><th>p</th><th>Sig.</th></tr></thead>
+    <tbody>
+      <tr><td class="tn">Entre grupos (tratamiento)</td><td>${r.SSb.toFixed(4)}</td><td>${r.dfb}</td><td>${r.MSb.toFixed(4)}</td><td>${r.F.toFixed(4)}</td><td class="${sig?'sy':'sn'}">${pf(r.p)}</td><td>${sig?'<span class="sy">*</span>':'<span class="sn">ns</span>'}</td></tr>
+      <tr><td class="tn">Dentro de grupos (error)</td><td>${r.SSw.toFixed(4)}</td><td>${r.dfw}</td><td>${r.MSw.toFixed(4)}</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr style="font-weight:600"><td class="tn">Total</td><td>${(r.SSb+r.SSw).toFixed(4)}</td><td>${r.dfb+r.dfw}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="dtbl-note">SC = Suma de cuadrados; gl = grados de libertad; CM = cuadrado medio. * p &lt; ${alpha}; ns = no significativo.</p>
+  <div class="slbl">Tamaño del efecto</div>
+  <div class="aitm">
+    <span class="aico">📏</span>
+    <div class="atxt">
+      <strong>η² (Eta cuadrado) = ${r.eta2.toFixed(4)}</strong>
+      <span>${r.eta2<.06?'Efecto pequeño (η² < 0.06)':r.eta2<.14?'Efecto mediano (0.06 ≤ η² < 0.14)':'Efecto grande (η² ≥ 0.14)'} · ${(r.eta2*100).toFixed(1)}% de la varianza total explicada por el tratamiento</span>
+    </div>
+  </div>`;
+}
+
+/* ── RENDER TUKEY ── */
+function rTukey(pairs,letters,alpha,unit,G){
+  const pf=p=>p<.0001?p.toExponential(3):p.toFixed(4);
+  const sorted=[...G].sort((a,b)=>avg(b.vals)-avg(a.vals));
+  let h=`<div class="slbl">Letras de agrupamiento (Compact Letter Display)</div><div class="lgrid">`;
+  sorted.forEach(g=>{h+=`<div class="litm"><span style="width:9px;height:9px;border-radius:50%;background:${g.color};display:inline-block;flex-shrink:0"></span><span>${g.name}</span><span class="lchip">${letters[g.name].toUpperCase()}</span><span style="font-size:.73rem;color:var(--muted);font-family:var(--fm)">${avg(g.vals).toFixed(3)} ${unit}</span></div>`;});
+  h+=`</div><p class="dtbl-note" style="margin-bottom:.9rem">Cepas con la misma letra <strong>NO</strong> difieren significativamente entre sí (Tukey HSD, α = ${alpha}).</p>
+  <div class="slbl">Tabla 2. Comparaciones por pares — Tukey HSD</div>
+  <div style="overflow-x:auto;margin-bottom:.7rem">
+  <table class="dtbl">
+    <thead><tr><th>Grupo 1</th><th>Grupo 2</th><th>Dif. (${unit})</th><th>q</th><th>p ajust.</th><th>HSD</th><th>Sig.</th></tr></thead><tbody>`;
+  pairs.forEach(p=>{h+=`<tr><td class="tn">${p.g1}</td><td class="tn">${p.g2}</td><td>${p.diff.toFixed(4)}</td><td>${p.q.toFixed(4)}</td><td class="${p.sig?'sy':'sn'}">${pf(p.p)}</td><td>${p.hsd.toFixed(4)}</td><td>${p.sig?'<span class="sy">* Sig.</span>':'<span class="sn">ns</span>'}</td></tr>`;});
+  h+=`</tbody></table></div><p class="dtbl-note">HSD = Diferencia honestamente significativa. * p &lt; ${alpha}; ns = no significativo.</p>`;
+  document.getElementById('c-tukey').innerHTML=h;
+}
+
+/* ── RENDER SUPUESTOS ── */
+function rSup(sw,lev,alpha){
+  const pf=p=>p<.0001?p.toExponential(3):p.toFixed(4);
+  let h=`<div class="slbl">Normalidad — Prueba de Shapiro-Wilk</div><div class="alist">`;
+  sw.forEach(s=>{const ok=s.p>alpha;h+=`<div class="aitm"><span class="aico">${ok?'✅':'⚠️'}</span><div class="atxt"><strong>${s.name}</strong><span>W = ${s.W.toFixed(4)} &nbsp;|&nbsp; p = ${pf(s.p)}</span></div><span class="abadge ${ok?'ab-ok':'ab-fail'}">${ok?'Normal':'No normal'}</span></div>`;});
+  h+=`</div>`;
+  const lok=lev.p>alpha;
+  h+=`<div class="slbl" style="margin-top:1rem">Homocedasticidad — Prueba de Levene</div><div class="alist"><div class="aitm"><span class="aico">${lok?'✅':'⚠️'}</span><div class="atxt"><strong>Levene</strong><span>F(${lev.dfb}, ${lev.dfw}) = ${lev.F.toFixed(4)} &nbsp;|&nbsp; p = ${pf(lev.p)}</span></div><span class="abadge ${lok?'ab-ok':'ab-fail'}">${lok?'Varianzas homogéneas':'Heterogéneas'}</span></div></div>
+  <div class="nbox"><strong>💡 Interpretación</strong>Si se cumplen normalidad (Shapiro-Wilk p &gt; α) y homocedasticidad (Levene p &gt; α), el ANOVA de una vía es válido. De lo contrario, considera usar Kruskal-Wallis con post-hoc de Dunn como alternativa no paramétrica.</div>`;
+  document.getElementById('c-sup').innerHTML=h;
+}
+
+/* ── RENDER DESC ── */
+function rDesc(G,unit,letters){
+  let h=`<div class="slbl">Tabla 3. Estadísticos descriptivos por cepa</div><div style="overflow-x:auto;margin-bottom:.7rem"><table class="dtbl"><thead><tr><th>Cepa</th><th>n</th><th>Media</th><th>DE</th><th>EE</th><th>Mín.</th><th>Q1</th><th>Mediana</th><th>Q3</th><th>Máx.</th><th>Grupo</th></tr></thead><tbody>`;
+  G.forEach(g=>{const v=g.vals,n=v.length;h+=`<tr><td class="tn">${g.name}</td><td>${n}</td><td>${avg(v).toFixed(4)}</td><td>${sd(v).toFixed(4)}</td><td>${se(v).toFixed(4)}</td><td>${Math.min(...v).toFixed(4)}</td><td>${qq1(v).toFixed(4)}</td><td>${med(v).toFixed(4)}</td><td>${qq3(v).toFixed(4)}</td><td>${Math.max(...v).toFixed(4)}</td><td><span class="lchip">${letters[g.name].toUpperCase()}</span></td></tr>`;});
+  h+=`</tbody></table></div><p class="dtbl-note">DE = Desviación estándar; EE = Error estándar; Q1/Q3 = cuartiles 1.° y 3.°. Unidades en ${unit}.</p>`;
+  document.getElementById('c-desc').innerHTML=h;
+}
+
+/* ── TABS ── */
+function stab(name){
+  const ns=['charts','anova','tukey','sup','desc'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',ns[i]===name));
+  document.querySelectorAll('.tc').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+/* ── PRINT ── */
+function printReport(){
+  document.getElementById('pm-title').textContent=document.getElementById('rtitle').value||'Análisis de producción de IAA';
+  document.getElementById('pm-author').textContent=document.getElementById('rauthor').value;
+  document.getElementById('pm-date').textContent='Generado el '+new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
+  document.querySelectorAll('.tc').forEach(c=>c.style.display='block');
+  window.print();
+  setTimeout(()=>{
+    document.querySelectorAll('.tc').forEach(c=>c.style.display='none');
+    const active=document.querySelector('.tab.active');
+    if(active){const ns=['charts','anova','tukey','sup','desc'];document.querySelectorAll('.tab').forEach((t,i)=>{if(t===active){document.getElementById('tab-'+ns[i]).style.display='block';}});}
+  },1200);
+}
+
+/* ── INIT ── */
+DEF.forEach(d=>addStrain(d.n,d.v));
 </script>
 </body>
 </html>
