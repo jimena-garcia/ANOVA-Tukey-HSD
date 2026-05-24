@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Análisis IAA — ANOVA + Tukey HSD</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#0d1117; --surface:#161b22; --surface2:#1c2330; --border:#30363d;
+    --green:#3fb950; --green2:#238636; --green3:#0d4429;
+    --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff;
+    --red:#f85149; --yellow:#e3b341; --teal:#39d353;
+    --font-head:'DM Serif Display',serif;
+    --font-body:'Outfit',sans-serif;
+    --font-mono:'DM Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+
+  /* ── HEADER ── */
+  header{
+    background:linear-gradient(135deg,#0d1117 0%,#0d2a1a 50%,#0d1117 100%);
+    border-bottom:1px solid var(--border);
+    padding:2.5rem 2rem 2rem;
+    position:relative;overflow:hidden;
+  }
+  header::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse 60% 80% at 30% 50%,rgba(63,185,80,.08),transparent);
+  }
+  header::after{
+    content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;
+    border-radius:50%;border:1px solid rgba(63,185,80,.15);
+  }
+  .header-inner{max-width:1200px;margin:0 auto;position:relative}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(63,185,80,.12);border:1px solid rgba(63,185,80,.3);
+    color:var(--green);font-size:.72rem;font-family:var(--font-mono);
+    padding:.25rem .75rem;border-radius:999px;margin-bottom:1rem;letter-spacing:.05em;
+  }
+  .badge::before{content:'●';font-size:.5rem}
+  h1{font-family:var(--font-head);font-size:2.4rem;line-height:1.1;color:var(--text);margin-bottom:.5rem}
+  h1 em{color:var(--green);font-style:normal}
+  .subtitle{color:var(--muted);font-size:.95rem;font-weight:300}
+
+  /* ── LAYOUT ── */
+  .container{max-width:1200px;margin:0 auto;padding:2rem}
+  .grid-main{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start}
+  @media(max-width:900px){.grid-main{grid-template-columns:1fr}}
+
+  /* ── PANEL ── */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .panel-head{
+    padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:.6rem;
+    background:var(--surface2);
+  }
+  .panel-head h2{font-size:.9rem;font-weight:500;letter-spacing:.02em;color:var(--text)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .panel-body{padding:1.25rem}
+
+  /* ── DATA ENTRY ── */
+  .strain-block{margin-bottom:1rem}
+  .strain-header{
+    display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;
+  }
+  .strain-name-input{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-mono);font-size:.82rem;padding:.35rem .6rem;
+    border-radius:6px;flex:1;transition:border-color .2s;
+  }
+  .strain-name-input:focus{outline:none;border-color:var(--green)}
+  .btn-del{
+    background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);
+    color:var(--red);border-radius:6px;width:28px;height:28px;
+    cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;
+    transition:all .2s;flex-shrink:0;
+  }
+  .btn-del:hover{background:rgba(248,81,73,.25)}
+  .values-input{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-mono);font-size:.8rem;padding:.5rem .75rem;
+    border-radius:6px;width:100%;transition:border-color .2s;
+    resize:none;height:52px;line-height:1.4;
+  }
+  .values-input:focus{outline:none;border-color:var(--green)}
+  .values-hint{color:var(--muted);font-size:.7rem;margin-top:.25rem}
+
+  .btn-add{
+    background:rgba(63,185,80,.1);border:1px dashed rgba(63,185,80,.4);
+    color:var(--green);border-radius:8px;width:100%;padding:.6rem;
+    cursor:pointer;font-family:var(--font-body);font-size:.85rem;
+    transition:all .2s;margin-top:.5rem;
+  }
+  .btn-add:hover{background:rgba(63,185,80,.2);border-style:solid}
+
+  .alpha-row{display:flex;align-items:center;gap:.75rem;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)}
+  .alpha-row label{font-size:.82rem;color:var(--muted);flex-shrink:0}
+  .alpha-select{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-mono);font-size:.82rem;padding:.3rem .5rem;border-radius:6px;
+  }
+  .unit-input{
+    background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-mono);font-size:.82rem;padding:.3rem .6rem;
+    border-radius:6px;flex:1;
+  }
+  .unit-input:focus,.alpha-select:focus{outline:none;border-color:var(--green)}
+
+  .btn-run{
+    background:linear-gradient(135deg,var(--green2),#196c2e);
+    border:none;color:#fff;font-family:var(--font-body);font-size:.95rem;font-weight:600;
+    padding:.85rem 1.5rem;border-radius:8px;width:100%;cursor:pointer;
+    margin-top:1.25rem;transition:all .25s;letter-spacing:.03em;
+    box-shadow:0 4px 15px rgba(63,185,80,.2);
+  }
+  .btn-run:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(63,185,80,.3)}
+  .btn-run:active{transform:translateY(0)}
+
+  /* ── RIGHT PANEL ── */
+  .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2)}
+  .tab{
+    padding:.75rem 1.25rem;font-size:.83rem;color:var(--muted);cursor:pointer;
+    border-bottom:2px solid transparent;transition:all .2s;font-weight:500;
+    white-space:nowrap;
+  }
+  .tab.active{color:var(--green);border-bottom-color:var(--green)}
+  .tab:hover:not(.active){color:var(--text)}
+
+  .tab-content{display:none;padding:1.5rem}
+  .tab-content.active{display:block}
+
+  /* ── CHARTS ── */
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+  @media(max-width:700px){.charts-grid{grid-template-columns:1fr}}
+  .chart-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem}
+  .chart-box h3{font-size:.78rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:.75rem;letter-spacing:.05em;text-transform:uppercase}
+  .chart-wrap{position:relative;height:240px}
+  .chart-full{grid-column:1/-1}
+
+  /* ── STATS TABLE ── */
+  .stat-table{width:100%;border-collapse:collapse;font-size:.83rem}
+  .stat-table th{
+    text-align:left;padding:.5rem .75rem;font-family:var(--font-mono);
+    font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--border);
+    letter-spacing:.06em;text-transform:uppercase;background:var(--surface2);
+  }
+  .stat-table td{padding:.5rem .75rem;border-bottom:1px solid rgba(48,54,61,.5)}
+  .stat-table tr:last-child td{border-bottom:none}
+  .stat-table tr:hover td{background:rgba(255,255,255,.02)}
+  .mono{font-family:var(--font-mono);font-size:.8rem}
+  .sig-yes{color:var(--red);font-weight:600}
+  .sig-no{color:var(--green)}
+  .letter-badge{
+    display:inline-block;background:rgba(63,185,80,.15);border:1px solid rgba(63,185,80,.3);
+    color:var(--green);font-family:var(--font-mono);font-size:.75rem;
+    padding:.1rem .45rem;border-radius:4px;font-weight:600;
+  }
+
+  /* ── ANOVA TABLE ── */
+  .anova-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
+  .anova-header{padding:.75rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border)}
+  .anova-header h3{font-size:.8rem;font-family:var(--font-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .result-chips{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.25rem}
+  .chip{
+    padding:.4rem .9rem;border-radius:999px;font-size:.8rem;font-family:var(--font-mono);
+    border:1px solid;
+  }
+  .chip-sig{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.4);color:var(--red)}
+  .chip-ns{background:rgba(63,185,80,.1);border-color:rgba(63,185,80,.4);color:var(--green)}
+  .chip-neutral{background:rgba(88,166,255,.1);border-color:rgba(88,166,255,.3);color:var(--accent)}
+
+  /* ── SUPUESTOS ── */
+  .assume-grid{display:grid;gap:.75rem}
+  .assume-item{
+    background:var(--bg);border:1px solid var(--border);border-radius:8px;
+    padding:.75rem 1rem;display:flex;align-items:center;gap:.75rem;
+  }
+  .assume-icon{font-size:1.1rem;flex-shrink:0}
+  .assume-text{flex:1}
+  .assume-text strong{display:block;font-size:.83rem;margin-bottom:.1rem}
+  .assume-text span{font-size:.76rem;color:var(--muted);font-family:var(--font-mono)}
+  .assume-badge{
+    font-size:.72rem;font-family:var(--font-mono);padding:.2rem .5rem;
+    border-radius:4px;flex-shrink:0;
+  }
+  .ok{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3)}
+  .fail{background:rgba(248,81,73,.12);color:var(--red);border:1px solid rgba(248,81,73,.3)}
+
+  /* ── EMPTY STATE ── */
+  .empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
+  .empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.4}
+  .empty p{font-size:.9rem}
+
+  /* ── HEATMAP ── */
+  #heatmap-container{overflow-x:auto}
+  .heatmap-table{border-collapse:collapse;font-size:.78rem;width:100%}
+  .heatmap-table th,.heatmap-table td{padding:.45rem .65rem;text-align:center;font-family:var(--font-mono)}
+  .heatmap-table th{color:var(--muted);font-size:.7rem;letter-spacing:.04em}
+
+  /* scroll */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+  .section-label{font-size:.72rem;font-family:var(--font-mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.6rem;margin-top:1.2rem}
+  .section-label:first-child{margin-top:0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="badge">Análisis Estadístico · Bacterias Productoras de IAA</div>
+    <h1>ANOVA + <em>Tukey HSD</em></h1>
+    <p class="subtitle">Ingresa tus datos, calcula y visualiza diferencias entre cepas bacterianas</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid-main">
+
+    <!-- ── LEFT: DATA ENTRY ── -->
+    <div>
+      <div class="panel">
+        <div class="panel-head"><div class="dot"></div><h2>Ingreso de Datos</h2></div>
+        <div class="panel-body">
+          <div class="section-label">Cepas bacterianas</div>
+          <div id="strains-container"></div>
+          <button class="btn-add" onclick="addStrain()">＋ Agregar cepa</button>
+
+          <div class="alpha-row">
+            <label>α =</label>
+            <select class="alpha-select" id="alpha-sel">
+              <option value="0.05" selected>0.05</option>
+              <option value="0.01">0.01</option>
+              <option value="0.001">0.001</option>
+            </select>
+            <label>Unidad:</label>
+            <input class="unit-input" id="unit-inp" value="µg/mL" placeholder="µg/mL"/>
+          </div>
+
+          <button class="btn-run" onclick="runAnalysis()">⚡ Calcular análisis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: RESULTS ── -->
+    <div class="panel" id="results-panel">
+      <div class="tabs" id="tabs">
+        <div class="tab active" onclick="switchTab('charts')">📊 Gráficas</div>
+        <div class="tab" onclick="switchTab('anova')">🔬 ANOVA</div>
+        <div class="tab" onclick="switchTab('tukey')">📋 Tukey HSD</div>
+        <div class="tab" onclick="switchTab('supuestos')">✅ Supuestos</div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="tab-content active" id="tab-charts">
+        <div id="charts-empty" class="empty">
+          <div class="empty-icon">🧫</div>
+          <p>Ingresa tus datos y presiona<br><strong>Calcular análisis</strong></p>
+        </div>
+        <div id="charts-content" style="display:none">
+          <div class="charts-grid">
+            <div class="chart-box">
+              <h3>Media ± Error Estándar</h3>
+              <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+            </div>
+            <div class="chart-box">
+              <h3>Distribución (boxplot)</h3>
+              <div class="chart-wrap"><canvas id="boxChart"></canvas></div>
+            </div>
+            <div class="chart-box chart-full">
+              <h3>Mapa de calor — p-valores Tukey</h3>
+              <div id="heatmap-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANOVA -->
+      <div class="tab-content" id="tab-anova">
+        <div id="anova-empty" class="empty"><div class="empty-icon">📐</div><p>Ejecuta el análisis primero</p></div>
+        <div id="anova-content" style="display:none"></div>
+      </div>
+
+      <!-- TUKEY -->
+      <div class="tab-content" id="tab-tukey">
+        <div id="tukey-empty" class="empty"><div class="empty-icon">🔍</div><p>Ejecuta el análisis primero</p></div>
+        <div id="tukey-content" style="display:none"></div>
+      </div>
+
+      <!-- SUPUESTOS -->
+      <div class="tab-content" id="tab-supuestos">
+        <div id="sup-empty" class="empty"><div class="empty-icon">✅</div><p>Ejecuta el análisis primero</p></div>
+        <div id="sup-content" style="display:none"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let strainId = 0;
+const PALETTE = ['#3fb950','#58a6ff','#e3b341','#f85149','#bc8cff','#39d353','#79c0ff','#ffb347','#ff7b72','#d2a8ff'];
+let charts = {};
+
+const DEFAULTS = [
+  {name:"Cepa A", vals:"45.2, 47.8, 44.1, 46.5, 45.9"},
+  {name:"Cepa B", vals:"62.3, 65.1, 63.7, 64.0, 61.8"},
+  {name:"Cepa C", vals:"38.4, 40.2, 37.9, 39.1, 38.8"},
+  {name:"Cepa D", vals:"71.5, 73.2, 70.8, 72.1, 74.0"},
+];
+
+/* ═══════════════════════════════════════════════
+   STRAIN UI
+═══════════════════════════════════════════════ */
+function addStrain(name='', vals=''){
+  const id = strainId++;
+  const col = PALETTE[id % PALETTE.length];
+  const div = document.createElement('div');
+  div.className = 'strain-block';
+  div.id = `sb-${id}`;
+  div.innerHTML = `
+    <div class="strain-header">
+      <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
+      <input class="strain-name-input" value="${name || 'Cepa '+(id+1)}" placeholder="Nombre cepa"/>
+      <button class="btn-del" onclick="removeStrain(${id})">✕</button>
+    </div>
+    <textarea class="values-input" placeholder="45.2, 47.8, 44.1, 46.5 ...">${vals}</textarea>
+    <div class="values-hint">Separa valores con comas o espacios</div>`;
+  document.getElementById('strains-container').appendChild(div);
+}
+
+function removeStrain(id){
+  const el = document.getElementById(`sb-${id}`);
+  if(el) el.remove();
+}
+
+function getData(){
+  const blocks = document.querySelectorAll('.strain-block');
+  const result = [];
+  for(const b of blocks){
+    const name = b.querySelector('.strain-name-input').value.trim() || 'Sin nombre';
+    const raw  = b.querySelector('.values-input').value;
+    const vals = raw.split(/[\s,;]+/).map(Number).filter(v => !isNaN(v) && v !== '');
+    if(vals.length >= 2) result.push({name, vals});
+  }
+  return result;
+}
+
+/* ═══════════════════════════════════════════════
+   STATISTICS
+═══════════════════════════════════════════════ */
+const mean = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+const variance = (arr,ddof=1) => {
+  const m=mean(arr); return arr.reduce((s,v)=>s+(v-m)**2,0)/(arr.length-ddof);
+};
+const std = (arr,ddof=1) => Math.sqrt(variance(arr,ddof));
+const se  = arr => std(arr)/Math.sqrt(arr.length);
+
+// Shapiro-Wilk approximation (W statistic simplified via correlation with normal scores)
+function shapiroWilk(x){
+  x = [...x].sort((a,b)=>a-b);
+  const n = x.length;
+  if(n < 3) return {W:1, p:1};
+  const m = mean(x);
+  const s2 = x.reduce((s,v)=>s+(v-m)**2,0);
+  // approximate expected order stats
+  const mi = x.map((_,i)=>{ const p=(i+1-.375)/(n+.25); return qnorm(p); });
+  const dot = x.reduce((s,v,i)=>s+v*mi[i],0);
+  const mi2 = mi.reduce((s,v)=>s+v*v,0);
+  const W = dot*dot/(s2*mi2);
+  // approximate p via log transform
+  const mu = -1.2725 + 1.0521*Math.log(n);
+  const sigma = 1.0308 - 0.26763*Math.log(n);
+  const z = (Math.log(1-W)-mu)/sigma;
+  const p = 1 - pnorm(z);
+  return {W: Math.max(0,Math.min(1,W)), p: Math.max(0,Math.min(1,p))};
+}
+
+// Standard normal CDF (Hart approximation)
+function pnorm(x){
+  const t=1/(1+.2316419*Math.abs(x));
+  const p=t*((.319381530+t*(-.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429)))));
+  return x>=0 ? 1-p*Math.exp(-x*x/2)/Math.sqrt(2*Math.PI) : p*Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+}
+function qnorm(p){
+  // Beasley-Springer-Moro
+  if(p<=0) return -38; if(p>=1) return 38;
+  const a=[2.50662823884,-18.61500062529,41.39119773534,-25.44106049637];
+  const b=[-8.47351093090,23.08336743743,-21.06224101826,3.13082909833];
+  const c=[0.3374754822726147,0.9761690190917186,0.1607979714918209,0.0276438810333863,0.0038405729373609,0.0003951896511349,0.0000321767881768,0.0000002888167364,0.0000003960315187];
+  const y=p-.5;
+  if(Math.abs(y)<.42){const r=y*y;return y*(((a[3]*r+a[2])*r+a[1])*r+a[0])/((((b[3]*r+b[2])*r+b[1])*r+b[0])*r+1);}
+  const r=p<.5?Math.log(-Math.log(p)):Math.log(-Math.log(1-p));
+  let x=c[0]+r*(c[1]+r*(c[2]+r*(c[3]+r*(c[4]+r*(c[5]+r*(c[6]+r*(c[7]+r*c[8])))))));
+  return p<.5?-x:x;
+}
+
+// Levene test
+function levene(groups){
+  const z = groups.map(g=>{ const m=mean(g); return g.map(v=>Math.abs(v-m)); });
+  return anova(z);
+}
+
+// One-way ANOVA
+function anova(groups){
+  const allVals = groups.flat();
+  const N = allVals.length; const k = groups.length;
+  const gm = mean(allVals);
+  const SSb = groups.reduce((s,g)=>s+g.length*(mean(g)-gm)**2,0);
+  const SSw = groups.reduce((s,g)=>s+g.reduce((q,v)=>q+(v-mean(g))**2,0),0);
+  const dfb = k-1, dfw = N-k;
+  const MSb = SSb/dfb, MSw = SSw/dfw;
+  const F = MSb/MSw;
+  const p = 1-fCDF(F,dfb,dfw);
+  const eta2 = SSb/(SSb+SSw);
+  return {F,p,dfb,dfw,SSb,SSw,MSb,MSw,N,k,eta2};
+}
+
+// F CDF approximation via regularized incomplete beta
+function fCDF(x,d1,d2){
+  const bt = d2/(d2+d1*x);
+  return 1-betaInc(bt,d2/2,d1/2);
+}
+function betaInc(x,a,b){
+  if(x<0||x>1)return 0;
+  if(x===0)return 0; if(x===1)return 1;
+  const lbeta = lgamma(a)+lgamma(b)-lgamma(a+b);
+  const front = Math.exp(Math.log(x)*a+Math.log(1-x)*b-lbeta)/a;
+  return front*betaCF(x,a,b);
+}
+function betaCF(x,a,b){
+  const MAX=200,EPS=3e-7;
+  const qab=a+b,qap=a+1,qam=a-1;
+  let c=1,d=1-qab*x/qap;
+  if(Math.abs(d)<1e-30)d=1e-30; d=1/d;
+  let h=d;
+  for(let m=1;m<=MAX;m++){
+    const m2=2*m;
+    let aa=m*(b-m)*x/((qam+m2)*(a+m2));
+    d=1+aa*d; if(Math.abs(d)<1e-30)d=1e-30;
+    c=1+aa/c; if(Math.abs(c)<1e-30)c=1e-30;
+    d=1/d; h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));
+    d=1+aa*d; if(Math.abs(d)<1e-30)d=1e-30;
+    c=1+aa/c; if(Math.abs(c)<1e-30)c=1e-30;
+    d=1/d; const del=d*c; h*=del;
+    if(Math.abs(del-1)<EPS)break;
+  }
+  return h;
+}
+function lgamma(z){
+  const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let x=z,y=z,tmp=x+5.5;
+  tmp-=(x+.5)*Math.log(tmp);
+  let ser=1.000000000190015;
+  for(let i=0;i<6;i++)ser+=c[i]/++y;
+  return -tmp+Math.log(2.5066282746310005*ser/x);
+}
+
+// Studentized range distribution (q) — approximation for Tukey
+function qTukey(p,k,df){
+  // approximation via binary search on pTukey
+  let lo=0,hi=20;
+  for(let i=0;i<80;i++){
+    const mid=(lo+hi)/2;
+    if(pTukey(mid,k,df)<p) lo=mid; else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+function pTukey(q,k,df){
+  // Lund & Lund integration approximation
+  if(q<=0)return 0;
+  const steps=100;
+  const b=q/Math.sqrt(2);
+  let sum=0;
+  for(let i=0;i<steps;i++){
+    const t1=(i/steps)*10,t2=((i+1)/steps)*10;
+    for(const t of [t1,t2]){
+      const z=b*t;
+      const chi=Math.exp(-t*t/2)*Math.sqrt(2/Math.PI);
+      const phi=2*pnorm(z)-1;
+      sum+=chi*Math.pow(phi,k-1);
+    }
+  }
+  return Math.min(1,sum*(10/steps)/2);
+}
+
+// Tukey HSD all pairs
+function tukeyHSD(groups, alpha){
+  const names = groups.map(g=>g.name);
+  const vals  = groups.map(g=>g.vals);
+  const {F,dfw,MSw} = anova(vals);
+  const pairs=[];
+  for(let i=0;i<names.length;i++){
+    for(let j=i+1;j<names.length;j++){
+      const diff = mean(vals[i])-mean(vals[j]);
+      const ni=vals[i].length, nj=vals[j].length;
+      const se_q = Math.sqrt(MSw/2*(1/ni+1/nj));
+      const q = Math.abs(diff)/se_q;
+      // p-value via studentized range (approximate)
+      const p = 1-pTukey(q, names.length, dfw);
+      const q_crit = qTukey(1-alpha, names.length, dfw);
+      const hsd = q_crit * se_q;
+      pairs.push({g1:names[i],g2:names[j],diff,q,p:Math.min(1,Math.max(0,p)),hsd,sig:Math.abs(diff)>hsd});
+    }
+  }
+  return pairs;
+}
+
+// Compact letter display
+function compactLetters(groups, pairs){
+  const names = groups.map(g=>g.name);
+  const n = names.length;
+  // adjacency: same letter if NOT significant
+  let sets = names.map((_,i)=>new Set([i]));
+  for(const p of pairs){
+    if(!p.sig){
+      const i=names.indexOf(p.g1), j=names.indexOf(p.g2);
+      // merge sets
+      const si=sets[i], sj=sets[j];
+      if(![...si].some(x=>[...sj].includes(x))){
+        const merged=new Set([...si,...sj]);
+        for(const idx of merged){ sets[idx]=merged; }
+      }
+    }
+  }
+  // deduplicate sets
+  const unique=[...new Set(sets.map(s=>JSON.stringify([...s].sort((a,b)=>a-b))))].map(s=>JSON.parse(s));
+  const letters={};
+  names.forEach(n=>letters[n]=[]);
+  unique.forEach((grp,li)=>{ grp.forEach(idx=>{ letters[names[idx]].push(String.fromCharCode(97+li)); }); });
+  names.forEach(n=>{ letters[n]=letters[n].join(''); });
+  return letters;
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN ANALYSIS
+═══════════════════════════════════════════════ */
+function runAnalysis(){
+  const groups = getData();
+  if(groups.length < 2){ alert('Necesitas al menos 2 cepas con datos válidos.'); return; }
+  const alpha = parseFloat(document.getElementById('alpha-sel').value);
+  const unit  = document.getElementById('unit-inp').value || 'µg/mL';
+
+  const anovaRes = anova(groups.map(g=>g.vals));
+  const pairs    = tukeyHSD(groups, alpha);
+  const letters  = compactLetters(groups, pairs);
+  const shapiros = groups.map(g=>({ name:g.name, ...shapiroWilk(g.vals) }));
+  const levRes   = levene(groups.map(g=>g.vals));
+
+  renderCharts(groups, pairs, letters, unit, alpha);
+  renderAnova(anovaRes, alpha, unit);
+  renderTukey(pairs, letters, alpha, unit);
+  renderSupuestos(shapiros, levRes, alpha);
+
+  // show content
+  ['charts','anova','tukey','supuestos'].forEach(t=>{
+    document.getElementById(`${t==='charts'?'charts':t}-empty`)&&(document.getElementById(`${t==='charts'?'charts':t}-empty`).style.display='none');
+  });
+  document.getElementById('charts-empty').style.display='none';
+  document.getElementById('charts-content').style.display='block';
+  document.getElementById('anova-empty').style.display='none';
+  document.getElementById('anova-content').style.display='block';
+  document.getElementById('tukey-empty').style.display='none';
+  document.getElementById('tukey-content').style.display='block';
+  document.getElementById('sup-empty').style.display='none';
+  document.getElementById('sup-content').style.display='block';
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER CHARTS
+═══════════════════════════════════════════════ */
+function renderCharts(groups, pairs, letters, unit, alpha){
+  const names = groups.map(g=>g.name);
+  const means = groups.map(g=>mean(g.vals));
+  const errors= groups.map(g=>se(g.vals));
+  const colors= groups.map((_,i)=>PALETTE[i%PALETTE.length]);
+
+  // destroy old charts
+  ['barChart','boxChart'].forEach(id=>{ if(charts[id]){charts[id].destroy();delete charts[id];} });
+
+  // ── Bar chart ──
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  charts.barChart = new Chart(barCtx,{
+    type:'bar',
+    data:{
+      labels: names,
+      datasets:[{
+        data: means,
+        backgroundColor: colors.map(c=>c+'cc'),
+        borderColor: colors,
+        borderWidth:2,
+        borderRadius:6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.parsed.y.toFixed(3)} ${unit}`}},
+      },
+      scales:{
+        x:{ticks:{color:'#8b949e',font:{family:'DM Mono',size:11}},grid:{color:'#30363d'}},
+        y:{ticks:{color:'#8b949e',font:{family:'DM Mono',size:10}},grid:{color:'#30363d'},
+           title:{display:true,text:unit,color:'#8b949e',font:{family:'DM Mono',size:10}}}
+      }
+    },
+    plugins:[{
+      afterDraw(chart){
+        const ctx=chart.ctx;
+        chart.data.datasets[0].data.forEach((_,i)=>{
+          const meta=chart.getDatasetMeta(0);
+          const bar=meta.data[i];
+          const x=bar.x, y=bar.y;
+          // error bar
+          const pixPerUnit=(chart.scales.y.height)/(chart.scales.y.max-chart.scales.y.min);
+          const ey=errors[i]*pixPerUnit;
+          ctx.strokeStyle='#e6edf3'; ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.moveTo(x,y-ey);ctx.lineTo(x,y+ey);
+          ctx.moveTo(x-6,y-ey);ctx.lineTo(x+6,y-ey);
+          ctx.moveTo(x-6,y+ey);ctx.lineTo(x+6,y+ey);
+          ctx.stroke();
+          // letter
+          ctx.fillStyle='#e6edf3'; ctx.font='bold 12px DM Mono';
+          ctx.textAlign='center';
+          ctx.fillText(letters[names[i]].toUpperCase(), x, y-ey-10);
+        });
+      }
+    }]
+  });
+
+  // ── Box + jitter ──
+  const boxData = groups.map((g,i)=>{
+    const sorted=[...g.vals].sort((a,b)=>a-b);
+    const q1=sorted[Math.floor(sorted.length*.25)];
+    const q3=sorted[Math.floor(sorted.length*.75)];
+    const med=sorted.length%2===0?(sorted[sorted.length/2-1]+sorted[sorted.length/2])/2:sorted[Math.floor(sorted.length/2)];
+    return {label:g.name,min:Math.min(...g.vals),q1,med,q3,max:Math.max(...g.vals),vals:g.vals,color:colors[i]};
+  });
+
+  const boxCtx = document.getElementById('boxChart').getContext('2d');
+  // Draw custom boxplot using a scatter chart
+  const jitterDatasets = groups.map((g,i)=>({
+    type:'scatter',
+    label:g.name,
+    data: g.vals.map(v=>({x:i+(Math.random()-.5)*.3, y:v})),
+    backgroundColor: colors[i]+'99',
+    pointRadius:4, showLine:false,
+    borderColor: colors[i],
+    borderWidth:1,
+  }));
+
+  charts.boxChart = new Chart(boxCtx,{
+    type:'scatter',
+    data:{ datasets: jitterDatasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{
+          type:'linear', min:-.5, max:groups.length-.5,
+          ticks:{
+            color:'#8b949e', font:{family:'DM Mono',size:10},
+            callback:v=>names[Math.round(v)]||'',
+            stepSize:1,
+          },
+          grid:{color:'#30363d'},
+        },
+        y:{ticks:{color:'#8b949e',font:{family:'DM Mono',size:10}},grid:{color:'#30363d'},
+           title:{display:true,text:unit,color:'#8b949e',font:{family:'DM Mono',size:10}}}
+      }
+    },
+    plugins:[{
+      afterDraw(chart){
+        const ctx=chart.ctx, sc=chart.scales;
+        boxData.forEach((b,i)=>{
+          const x=sc.x.getPixelForValue(i);
+          const w=30;
+          const yq1=sc.y.getPixelForValue(b.q1);
+          const yq3=sc.y.getPixelForValue(b.q3);
+          const ymed=sc.y.getPixelForValue(b.med);
+          const ymin=sc.y.getPixelForValue(b.min);
+          const ymax=sc.y.getPixelForValue(b.max);
+          ctx.strokeStyle=b.color; ctx.fillStyle=b.color+'33'; ctx.lineWidth=2;
+          ctx.fillRect(x-w,yq3,w*2,yq1-yq3);
+          ctx.strokeRect(x-w,yq3,w*2,yq1-yq3);
+          ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(x-w,ymed);ctx.lineTo(x+w,ymed);ctx.stroke();
+          ctx.strokeStyle=b.color; ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.moveTo(x,yq3);ctx.lineTo(x,ymax);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x,yq1);ctx.lineTo(x,ymin);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x-w/2,ymax);ctx.lineTo(x+w/2,ymax);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x-w/2,ymin);ctx.lineTo(x+w/2,ymin);ctx.stroke();
+        });
+      }
+    }]
+  });
+
+  // ── Heatmap ──
+  const n=groups.length;
+  let html='<table class="heatmap-table"><thead><tr><th></th>';
+  names.forEach(n=>{ html+=`<th>${n}</th>`; });
+  html+='</tr></thead><tbody>';
+  names.forEach((r,i)=>{
+    html+=`<tr><th>${r}</th>`;
+    names.forEach((c,j)=>{
+      if(i===j){
+        html+=`<td style="background:#1c2330;color:#8b949e">—</td>`;
+      } else {
+        const pair=pairs.find(p=>(p.g1===r&&p.g2===c)||(p.g1===c&&p.g2===r));
+        if(pair){
+          const p=pair.p;
+          const green=Math.round(p*255), red=Math.round((1-p)*255);
+          const bg=`rgba(${red},${green},60,0.25)`;
+          const border=pair.sig?'#f85149':'#3fb950';
+          const txt=pair.sig?'★':'';
+          html+=`<td style="background:${bg};border:1px solid ${border}33;color:#e6edf3" title="p=${p.toFixed(4)}">${p.toFixed(3)} ${txt}</td>`;
+        }
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  html+=`<p style="font-size:.72rem;color:#8b949e;margin-top:.5rem;font-family:DM Mono">★ = diferencia significativa (p < ${alpha})</p>`;
+  document.getElementById('heatmap-container').innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER ANOVA
+═══════════════════════════════════════════════ */
+function renderAnova(r, alpha, unit){
+  const sig = r.p < alpha;
+  let html = `<div class="result-chips">
+    <span class="chip ${sig?'chip-sig':'chip-ns'}">F(${r.dfb},${r.dfw}) = ${r.F.toFixed(4)}</span>
+    <span class="chip ${sig?'chip-sig':'chip-ns'}">p = ${r.p<.0001?r.p.toExponential(3):r.p.toFixed(4)}</span>
+    <span class="chip chip-neutral">η² = ${r.eta2.toFixed(4)}</span>
+    <span class="chip ${sig?'chip-sig':'chip-ns'}">${sig?'✗ Diferencias significativas':'✓ Sin diferencias significativas'}</span>
+  </div>`;
+
+  html+=`<div class="anova-box"><div class="anova-header"><h3>Tabla ANOVA</h3></div>
+  <table class="stat-table">
+  <thead><tr><th>Fuente</th><th>SC</th><th>gl</th><th>CM</th><th>F</th><th>p</th></tr></thead>
+  <tbody>
+  <tr><td>Entre grupos</td><td class="mono">${r.SSb.toFixed(4)}</td><td class="mono">${r.dfb}</td><td class="mono">${r.MSb.toFixed(4)}</td><td class="mono">${r.F.toFixed(4)}</td><td class="mono ${sig?'sig-yes':'sig-no'}">${r.p<.0001?r.p.toExponential(3):r.p.toFixed(4)}</td></tr>
+  <tr><td>Dentro grupos</td><td class="mono">${r.SSw.toFixed(4)}</td><td class="mono">${r.dfw}</td><td class="mono">${r.MSw.toFixed(4)}</td><td>—</td><td>—</td></tr>
+  <tr style="font-weight:600"><td>Total</td><td class="mono">${(r.SSb+r.SSw).toFixed(4)}</td><td class="mono">${r.dfb+r.dfw}</td><td>—</td><td>—</td><td>—</td></tr>
+  </tbody></table></div>`;
+
+  html+=`<div class="section-label">Tamaño del efecto</div>
+  <div class="assume-item">
+    <span class="assume-icon">📏</span>
+    <div class="assume-text">
+      <strong>η² (Eta cuadrado) = ${r.eta2.toFixed(4)}</strong>
+      <span>${r.eta2<.06?'Efecto pequeño':r.eta2<.14?'Efecto mediano':'Efecto grande'} · ${(r.eta2*100).toFixed(1)}% de la varianza explicada</span>
+    </div>
+  </div>`;
+
+  document.getElementById('anova-content').innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER TUKEY
+═══════════════════════════════════════════════ */
+function renderTukey(pairs, letters, alpha, unit){
+  let html=`<div class="section-label">Letras de agrupamiento (Tukey HSD)</div>
+  <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem">`;
+  Object.entries(letters).forEach(([name,l])=>{
+    html+=`<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:.4rem .9rem;display:flex;align-items:center;gap:.6rem">
+      <span style="font-size:.82rem">${name}</span>
+      <span class="letter-badge">${l.toUpperCase()}</span>
+    </div>`;
+  });
+  html+=`</div><p style="font-size:.75rem;color:#8b949e;margin-bottom:1.25rem">Cepas con la misma letra <strong>NO</strong> difieren significativamente (α = ${alpha})</p>`;
+
+  html+=`<div class="anova-box"><div class="anova-header"><h3>Comparaciones por par</h3></div>
+  <table class="stat-table">
+  <thead><tr><th>Grupo 1</th><th>Grupo 2</th><th>Diferencia (${unit})</th><th>q</th><th>p-ajust.</th><th>Sig.</th></tr></thead><tbody>`;
+  pairs.forEach(p=>{
+    html+=`<tr>
+      <td>${p.g1}</td><td>${p.g2}</td>
+      <td class="mono">${p.diff.toFixed(4)}</td>
+      <td class="mono">${p.q.toFixed(4)}</td>
+      <td class="mono ${p.sig?'sig-yes':'sig-no'}">${p.p<.0001?p.p.toExponential(3):p.p.toFixed(4)}</td>
+      <td>${p.sig?'<span class="sig-yes">✗ Sig.</span>':'<span class="sig-no">✓ NS</span>'}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('tukey-content').innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER SUPUESTOS
+═══════════════════════════════════════════════ */
+function renderSupuestos(shapiros, levRes, alpha){
+  let html=`<div class="section-label">Normalidad — Shapiro-Wilk (por cepa)</div><div class="assume-grid">`;
+  shapiros.forEach(s=>{
+    const ok=s.p>alpha;
+    html+=`<div class="assume-item">
+      <span class="assume-icon">${ok?'✅':'⚠️'}</span>
+      <div class="assume-text">
+        <strong>${s.name}</strong>
+        <span>W = ${s.W.toFixed(4)} · p = ${s.p<.0001?s.p.toExponential(3):s.p.toFixed(4)}</span>
+      </div>
+      <span class="assume-badge ${ok?'ok':'fail'}">${ok?'Normal':'No normal'}</span>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  const levOk=levRes.p>alpha;
+  html+=`<div class="section-label" style="margin-top:1.25rem">Homocedasticidad — Prueba de Levene</div>
+  <div class="assume-grid">
+  <div class="assume-item">
+    <span class="assume-icon">${levOk?'✅':'⚠️'}</span>
+    <div class="assume-text">
+      <strong>Levene</strong>
+      <span>F(${levRes.dfb},${levRes.dfw}) = ${levRes.F.toFixed(4)} · p = ${levRes.p<.0001?levRes.p.toExponential(3):levRes.p.toFixed(4)}</span>
+    </div>
+    <span class="assume-badge ${levOk?'ok':'fail'}">${levOk?'Varianzas homogéneas':'Varianzas heterogéneas'}</span>
+  </div></div>`;
+
+  html+=`<div style="background:#0d2a1a;border:1px solid #196c2e;border-radius:8px;padding:.85rem 1rem;margin-top:1.25rem;font-size:.8rem;color:#3fb950;line-height:1.6">
+  <strong style="display:block;margin-bottom:.3rem">💡 Nota interpretativa</strong>
+  Si algún supuesto falla, considera usar la prueba de Kruskal-Wallis (no paramétrica) como alternativa al ANOVA, y el test de Dunn como post-hoc.
+  </div>`;
+
+  document.getElementById('sup-content').innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════ */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names=['charts','anova','tukey','supuestos'];
+    t.classList.toggle('active',names[i]===name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+DEFAULTS.forEach(d=>addStrain(d.name, d.vals));
+</script>
+</body>
+</html>
